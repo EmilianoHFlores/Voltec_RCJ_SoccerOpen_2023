@@ -54,14 +54,8 @@ sensor.set_auto_gain(False, \
 sensor.set_saturation(3)
 
 ox = 0
-oy = 0
-oz = 0
 bx = 0
-by = 0
-bz = 0
 yx = 0
-yy = 0
-yz = 0
 
 oBlob = None
 yBlob = None
@@ -83,51 +77,39 @@ while(True):
         oBlob = max(oBlobs, key=lambda b: b.area())
         if SHOW_IMAGE_DECORATIONS:    img.draw_circle(oBlob.enclosing_circle(), color = (255, 150, 20))
         ox = oBlob.cx();
-        oy = oBlob.cy();
-        oz = oBlob.area();
         green_led.off()
         red_led.on()
     else:
         oBlob = None
         ox = -1
-        oy = -1
-        oz = -1
         red_led.off()
 
     if yBlobs:
         yBlob = max(yBlobs, key=lambda b: b.area())
         if SHOW_IMAGE_DECORATIONS:    img.draw_rectangle(yBlob.rect(), color = (255, 255, 0) )
         yx = yBlob.cx();
-        yy = yBlob.cy();
-        yz = yBlob.area();
     else:
         yBlob = None
         yx = -1
-        yy = -1
-        yz = -1
 
     if bBlobs:
         bBlob = max(bBlobs, key=lambda b: b.area())
         if SHOW_IMAGE_DECORATIONS:    img.draw_rectangle(bBlob.rect(), color = (0, 0, 255))
         bx = bBlob.cx();
-        by = bBlob.cy();
-        bz = bBlob.area();
         green_led.off()
         blue_led.on()
     else:
         bBlob = None
         bx = -1
-        by = -1
-        bz = -1
         blue_led.off()
 
     if uart.any():
         read = uart.read(1)
         print(read)
         if read == bytes("o", "ascii"):
-            uart.write(f"x:{ox},y:{oy},z:{oz},id:o")
+            uart.write(f"{ox}")
         if read == bytes("b", "ascii"):
-            uart.write(f"x:{bx},y:{by},z:{bz},id:b")
+            uart.write(f"{bx}")
         if read == bytes("y", "ascii"):
-            uart.write(f"x:{yx},y:{yy},z:{yz},id:y")
+            uart.write(f"{yx}")
 
