@@ -6,23 +6,19 @@
 
 class Motor {
   private:
-    byte NWpwm
     byte NWa;
     byte NWb;
-    byte NEpwm
     byte NEa;
     byte NEb;
-    byte SWpwm
     byte SWa;
     byte SWb;
-    byte SEpwm
     byte SEa;
     byte SEb;
     Utils utilsMotor;
     Compass compassMotor;
   public:
     Motor ();
-    void init (byte NWpwm, byte NWa, byte NWb, byte NEpwm, byte NEa, byte NEb, byte SWpwm, byte SWa, byte SWb, byte SEpwm, byte SEa, byte SEb);
+    void init (byte NWa, byte NWb, byte NEa, byte NEb, byte SWa, byte SWb, byte SEa, byte SEb);
     void reset (); // Equivalent to the STOP() function
     void reset (int d);
     void test();
