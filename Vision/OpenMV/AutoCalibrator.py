@@ -5,6 +5,18 @@ import sensor, image, time
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA) # Width = 320, Height = 240
+sensor.set_hmirror(True)
+
+# Disable automatic settings
+sensor.set_auto_gain(False)
+sensor.set_auto_whitebal(False)
+
+# Set exposure, gain, brightness, contrast, and white balance values
+sensor.set_auto_exposure(False, exposure_us=2250) # adjust as needed
+sensor.set_gainceiling(128) # adjust as needed
+sensor.set_brightness(3) # adjust as needed
+sensor.set_contrast(-2) # adjust as needed
+sensor.set_saturation(-1) # adjust as needed
 
 clock = time.clock()
 
@@ -102,7 +114,7 @@ while(True):
     millis = (time.time_ns() - nanos_start) // 1000000
 
     if firstLoop:
-        img = sensor.snapshot();
+        img = sensor.snapshot().rotation_corr(x_rotation = 180);
         pixel_value = img.get_pixel(x, y) # Center of the image
 
         img.draw_circle(x, y, 25, color=(pixel_value), thickness=3, fill=False)
@@ -121,7 +133,7 @@ while(True):
             last_rgb = (0, 0, 0);
     else:
         if index >= 20:
-            img = sensor.snapshot();
+            img = sensor.snapshot().rotation_corr(x_rotation = 180);
 
             min_l = min(thresholds, key=lambda x: x[0])[0]
             max_l = max(thresholds, key=lambda x: x[0])[0]
@@ -139,7 +151,7 @@ while(True):
                 print("Final threshold: [({}, {}, {}, {}, {}, {})]".format(min_l, max_l, min_a, max_a, min_b, max_b))
                 printOnce = False
         else:
-            img = sensor.snapshot()
+            img = sensor.snapshot().rotation_corr(x_rotation = 180)
             if (millis // 1000 > index):
                 thresholds = [rgb2lab(last_rgb[0], last_rgb[1], last_rgb[2])] + thresholds
                 rgbs = [last_rgb] + rgbs;

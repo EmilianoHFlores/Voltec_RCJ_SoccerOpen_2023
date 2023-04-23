@@ -6,26 +6,31 @@
 
 class Motor {
   private:
+    byte NWpwm;
     byte NWa;
     byte NWb;
+    byte NEpwm;
     byte NEa;
     byte NEb;
+    byte SWpwm;
     byte SWa;
     byte SWb;
+    byte SEpwm;
     byte SEa;
     byte SEb;
     Utils utilsMotor;
     Compass compassMotor;
   public:
     Motor ();
-    void init (byte NWa, byte NWb, byte NEa, byte NEb, byte SWa, byte SWb, byte SEa, byte SEb);
+    void init (byte NWpwm, byte NWa, byte NWb, byte NEpwm, byte NEa, byte NEb, byte SWpwm, byte SWa, byte SWb, byte SEpwm, byte SEa, byte SEb);
     void reset (); // Equivalent to the STOP() function
     void reset (int d);
     void test();
-    void begin (byte NWa, byte NWb, byte NEa, byte NEb, byte SWa, byte SWb, byte SEa, byte SEb);
+    void begin (byte NWpwm, byte NWa, byte NWb, byte NEpwm, byte NEa, byte NEb, byte SWpwm, byte SWa, byte SWb, byte SEpwm, byte SEa, byte SEb);
 
     void attachUtils (byte buzzer, int width, int height);
-    void attachCompass (String type);
+    void attachCompass ();
+    void attachQrd (byte n1, byte n2, byte n3, byte n4, byte s1, byte s2, byte s3, byte s4, byte e1, byte e2, byte e3, byte e4, byte w1, byte w2, byte w3, byte w4);
     // Raw movement functions
     void _NW(int id, int speed);
     void _NW(int speed);
@@ -47,7 +52,12 @@ class Motor {
     void SouthEast(int speed);
     void TurnLeft(int speed);
     void TurnRight(int speed);
+  
+    void forceStop();
+    void hardReset();
 
+    void North(int speed, int d);
+    void South(int speed, int d);
     void East(int speed, int d);
     void West(int speed, int d);
     void NorthWest(int speed, int d);

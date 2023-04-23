@@ -3,18 +3,24 @@
 
 class Camera {
   private:
+    String team;
     long baud;
     int timeout;
   public:
     Camera ();
-    void init (long bd, int tmo);
+    void init (long bd, int tmo, String TEAM);
     void reset();
     void test ();
-    void begin (long bd, int tmo);
+    void begin (long bd, int tmo, String TEAM);
 
-    int callOrange ();
-    int callBlue ();
-    int callYellow ();
+    int xOrange ();
+    int yOrange();
+
+    int ownGoal();
+    int enemyGoal();
+
+    int xBlue ();
+    int xYellow ();
 };
 
 #endif

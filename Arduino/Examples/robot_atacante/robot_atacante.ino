@@ -1,15 +1,17 @@
-/*
-  Este es un código de ejemplo de un robot atacante con baja precisión
-  Esta versión del código fue utilizada durante el Torneo Regional de Robótica XII
-*/
-
-#include <LiquidCrystal_I2C.h>
-
+#include <Wire.h>
 #include "Motor.h"
 #include "Utils.h"
 #include "Camera.h"
 #include "Compass.h"
 #include "Ultrasonic.h"
+#include "Qrd.h"
+#include "Oled.h"
+
+#define TEAM "blue"
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET 4
 
 #define maxSpeed 255
 #define aproachSpeed 150
@@ -24,141 +26,213 @@ Utils utils;
 Camera camera;
 Compass compass;
 Ultrasonic ultrasonic;
-LiquidCrystal_I2C lcd (0x27, 16, 2);
+Qrd qrd;
+Oled oled;
 
 void setup() {
   Serial.begin(9600);
   Serial.println("Starting...");
 
-  lcd.begin(16, 2);
-  lcd.backlight();
-  lcd.print("Martillo jala :)");
-  
-  motor.begin(7, 8, 10, 9, 12, 11, 3, 2);
-  camera.begin(115200, 1);
-  compass.begin("navx");
-  ultrasonic.begin(49, 48, 51, 50, 53, 52);
+  oled.begin();
+  oled.print(10, 10, "Starting...");
+  oled.show();
+
+  motor.begin(4, 34, 35, 3, 32, 33, 2, 30, 31, 5, 37, 36);
+  motor.attachCompass();
+  qrd.attachCompass();
+  camera.begin(115200, 1, TEAM);
   utils.begin(53, 320, 240);
-
+  compass.begin();
+  //        N1.  N2. N3.   N4.  S1.  S2.  S3.  S4.  E1.  E2.  E3.  E4.  W1.  W2.  W3.  W4.
+  qrd.begin(A11, A8, A10,  A9,  A3,  A0,  A2,  A1,  A7,  A4,  A6,  A5,  A15, A12, A14, A13);
+  qrd.attachMotors(4, 34, 35, 3, 33, 32, 2, 30, 31, 5, 36, 37);
   motor.attachUtils(53, 320, 240);
-  motor.attachCompass("navx");
 
-  motor.reset(5000);
+  motor.reset(1500);  // Wait for NAVX to turn on TODO: Rewrite this function
 };
 
-int angle_route;
-int ball_x;
-int ball_angle;
-int ball_location;
-int ball_preciseLocation;
+int j = 0;
+int i = 0;
+int ocx = -1;
+int gcx = -1;
+int step = -1;
+float angle = -1;
+bool whileLoop = true;
+/**
+ * scenario 0 -> ball is between 0 and 45 degrees
+ * scenario 1 -> ball is between 45 and 90 degrees
+ * scenario 2 -> ball is between 90 and 135 degrees
+ * scenario 3 -> ball is between 135 and 150 degrees
+ * scenario 4 -> ball is between 150 and 180 degrees
+*/
 
-bool endLoop = false;
-bool next = false;
-float ballDegrees = -1;
-
-void loop () {
-  lcd.setCursor(0, 1);
-  lcd.print("DIOS PLAN            ");
-
-
-  ball_x = camera.callOrange();
-  if (ball_x > 0) motor.North(200, 100);
-  else motor.TurnRight(100);
-
-  endLoop = false;
-  ball_x = camera.callOrange();
-    if (ball_x > 0) {
-    while (!endLoop) {
-      lcd.setCursor(0, 1);
-      lcd.print("Locate        ");
-      ball_x = camera.callOrange();
-      Serial.println(utils.checkPreciseDirection(ball_x, 7));
-      switch (utils.checkPreciseDirection(ball_x, 7)) {
-        case 0:
-          motor.TurnRight(rotationSpeed);
-          break;
-        case 1:
-        case 2:
-        case 3:
-        case 4:
-        case 5:
-          next = true;
-          endLoop = true;
-          ball_angle = compass.checkAngle();
-          if (ball_angle > 120 && ball_angle < -120) {
-            motor.rotateToAngle0(ball_angle, angleSpeed, true);
-            delay(250);
-            motor.South(maxSpeed, 500);
-          }
-          break;
-        case 6:
-          motor.TurnLeft(rotationSpeed);
-          break;
-        case -1:
-          next = false;
-          endLoop = true;
-          break;
-      }
-    }
-
-    if (next) {
-      Serial.println("Colocar el robot en frente de la pelota");
-      lcd.setCursor(0, 1);
-      lcd.print("Place           ");
-      next = false;
-      endLoop = false;
-      motor.moveToAngle(ball_angle > 0 ? 60 : -60, aproachSpeed);
-      while (!endLoop) {
-        ball_x = camera.callOrange();
-        switch (utils.checkPreciseDirection(ball_x, 7)) {
-          case 2:
-          case 3:
-          case 4:
-              next = true;
-              endLoop = true;
-              motor.reset();
-            break;
-            break;
-          case -1:
-            endLoop = true;
-            break;
-        }
-      }
-    }
-
-    if (next) { // Girar el robot y meter gol
-      lcd.setCursor(0, 1);
-      lcd.print("rot and score   ");
-      Serial.println("Girar el robot y meter gol");
-      next = false;
-      endLoop = false;
-      motor.rotateToAngle0(compass.checkAngle(), angleSpeed, true);
-      motor.North(maxSpeed);
-      while (!endLoop) {
-        ball_x = camera.callOrange();
-        if (ball_x == -1) {
-          endLoop = true;
-          next = true;
-          delay(500);
-          motor.reset();
-        }
-      }
-    }
-
-    if (next) {
-      next = false;
-      endLoop = false;
-      motor.rotateToAngle0(compass.checkAngle(), angleSpeed, true);
-      motor.South(maxSpeed, 500);
-    }
-
-  angle_route = -1;
-  ball_x = -1;
-  ball_angle = -1;
-  ball_location = -1;
-  ball_preciseLocation = -1;
-
-  } else {
-    motor.TurnRight(rotationSpeed);
+void loop() {
+  if (step == -1) {
+    oled.print(0, 0, "Starting loop again in step 0", 2); oled.show();
+    motor.hardReset();
+    step = 0;
   }
+
+  if (step == 0) {  // Find ball
+    Serial.println("Entered step 0");
+    ocx = camera.xOrange();
+    int preciseLocation = utils.checkPreciseDirection(ocx, 7);
+    angle = compass.checkAngle();
+    oled.print(105, 0, "S0", 1);
+    oled.print(105, 54, i, 1);
+    oled.print(0, 20, "ocx: ", 1);
+    oled.print(30, 20, ocx, 1);
+    oled.print(0, 40, "deg: ", 1);
+    oled.print(30, 40, angle, 1);
+    oled.show();
+    switch (preciseLocation) {
+      case 0:
+      case 1:
+        motor.TurnLeft(positionSpeed);
+        break;
+      case 2:
+      case 3:
+      case 4:
+        step = 1;
+        motor.hardReset();
+        Serial.println("Ended step 0");
+        break;
+      case 5:
+      case 6:
+        motor.TurnRight(positionSpeed);
+        break;
+      case -1:
+        motor.TurnRight(rotationSpeed);
+    }
+  }
+
+  if (step == 1) {  // Decide strategy
+    oled.print(95, 0, "S1", 1);
+    oled.print(105, 54, i, 1);
+    oled.print(0, 0, "deg: ", 1);
+    oled.print(30, 0, angle, 1);
+    oled.show();
+
+    if (angle >= 30) step = 2;
+    else if (angle <= 0 && angle <= -30) step = 3;
+    else step = 4;
+  }
+
+  if (step == 2) {
+    ocx = camera.xOrange();
+    gcx = camera.enemyGoal();
+    oled.print(95, 0, "S2", 1); oled.print(105, 54, i, 1);
+    oled.print(0, 0, "deg: ", 1); oled.print(30, 0, angle, 1);
+    oled.print(0, 20, "ocx: ", 1); oled.print(30, 20, ocx, 1);
+    oled.print(0, 40, "gcx: ", 1); oled.print(30, 40, gcx, 1);
+    oled.show();
+
+    switch (utils.checkPreciseDirection(ocx, 13)) {
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+        motor.TurnLeft(positionSpeed);
+        break;
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+        if (utils.checkDirection(gcx) == 1) {
+          oled.print(0, 0, "TRYING TO SCORE", 3); oled.show();
+          motor.moveToAngle(0, maxSpeed, 1000);
+          resetVariables();
+        } else {
+          motor.moveToAngle(45, angleSpeed);
+        }
+        break;
+      case 9:
+      case 10:
+      case 11:
+      case 12:
+        motor.TurnRight(positionSpeed);
+        break;
+      case -1:
+        motor.North(maxSpeed, 1000);
+        motor.hardReset();
+        resetVariables();
+    }
+  }
+
+  if (step == 3) {
+    ocx = camera.xOrange();
+    gcx = camera.enemyGoal();
+    oled.print(95, 0, "S2", 1); oled.print(105, 54, i, 1);
+    oled.print(0, 0, "deg: ", 1); oled.print(30, 0, angle, 1);
+    oled.print(0, 20, "ocx: ", 1); oled.print(30, 20, ocx, 1);
+    oled.print(0, 40, "gcx: ", 1); oled.print(30, 40, gcx, 1);
+    oled.show();
+
+    switch (utils.checkPreciseDirection(ocx, 13)) {
+      case 0:
+      case 1:
+      case 2:
+      case 3:
+        motor.TurnLeft(positionSpeed);
+        break;
+      case 4:
+      case 5:
+      case 6:
+      case 7:
+      case 8:
+        if (utils.checkDirection(gcx) == 1) {
+          oled.print(0, 0, "TRYING TO SCORE", 3); oled.show();
+          motor.moveToAngle(0, maxSpeed, 1000);
+          resetVariables();
+        } else {
+          motor.moveToAngle(315, angleSpeed);
+        }
+        break;
+      case 9:
+      case 10:
+      case 11:
+      case 12:
+        motor.TurnRight(positionSpeed);
+        break;
+      case -1:
+        motor.North(maxSpeed, 500);
+        motor.South(maxSpeed, 500);
+        motor.hardReset();
+        resetVariables();
+    }
+  }
+
+  if (step == 4) {
+    ocx = camera.xOrange();
+
+    oled.print(95, 0, "S4", 1);
+    oled.print(105, 54, i, 1);
+    oled.print(0, 20, "ocx: ", 1); oled.print(30, 20, ocx, 1);
+    oled.print(0, 40, "deg: ", 1); oled.print(30, 40, angle, 1);
+    oled.show();
+
+    motor.moveToAngle(angle, maxSpeed);
+    if (ocx < 0) {
+      motor.moveToAngle(angle, maxSpeed, 500);
+
+      int _angle = 0;
+      if (angle > 0) _angle = angle - 180;
+      else _angle = angle + 180; 
+
+      motor.moveToAngle(_angle, maxSpeed, 500);
+      resetVariables();
+    }
+  }
+
+  i++;
+}
+
+void resetVariables() {
+  j = 0;
+  ocx = -1;
+  gcx = -1;
+  step = -1;
+  angle = -1;
+  whileLoop = true;
 }

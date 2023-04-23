@@ -1,7 +1,9 @@
 #include <Arduino.h>
 #include "Motor.h"
+#include "Qrd.h"
 
 #define COMPASS_DEVIATION 15
+Qrd qrdMotor;
 
 Motor::Motor() {
   this -> NWa = 0;
@@ -12,30 +14,47 @@ Motor::Motor() {
   this -> SWb = 0;
   this -> SEa = 0;
   this -> SEb = 0;
+  this -> NWpwm = 0;
+  this -> NEpwm = 0;
+  this -> SWpwm = 0;
+  this -> SEpwm = 0;
 }
 
-void Motor::begin(byte nwa, byte nwb, byte nea, byte neb, byte swa, byte swb, byte sea, byte seb) {
-  init (nwa, nwb, nea, neb, swa, swb, sea, seb);
+void Motor::begin(byte nwpwm, byte nwa, byte nwb, byte nepwm, byte nea, byte neb, byte swpwm, byte swa, byte swb, byte sepwm, byte sea, byte seb) {
+  init (nwpwm, nwa, nwb, nepwm, nea, neb, swpwm, swa, swb, sepwm, sea, seb);
 }
 
 void Motor::attachUtils (byte buzzer, int width, int height) {
   utilsMotor.begin(buzzer, width, height);
 }
 
-void Motor::attachCompass (String type) {
-  compassMotor.begin(type);
+void Motor::attachCompass () {
+  compassMotor.begin();
 }
 
-void Motor::init (byte nwa, byte nwb, byte nea, byte neb, byte swa, byte swb, byte sea, byte seb) {
+void Motor::attachQrd(byte n1, byte n2, byte n3, byte n4, byte s1, byte s2, byte s3, byte s4, byte e1, byte e2, byte e3, byte e4, byte w1, byte w2, byte w3, byte w4) {
+  qrdMotor.begin(n1, n2, n3, n4, s1, s2, s3, s4, e1, e2, e3, e4, w1, w2, w3, w4);
+  qrdMotor.attachMotors(NWpwm, NWa, NWb, NEpwm, NEa, NEb, SWpwm, SWa, SWb, SEpwm, SEa, SEb);
+}
+
+void Motor::init (byte nwpwm, byte nwa, byte nwb, byte nepwm, byte nea, byte neb, byte swpwm, byte swa, byte swb, byte sepwm, byte sea, byte seb) {
+  NWpwm = nwpwm;
   NWa = nwa;
   NWb = nwb;
+  NEpwm = nepwm;
   NEa = nea;
   NEb = neb;
+  SWpwm = swpwm;
   SWa = swa;
   SWb = swb;
+  SEpwm = sepwm;
   SEa = sea;
   SEb = seb;
 
+  pinMode(SEpwm, OUTPUT);
+  pinMode(SWpwm, OUTPUT);
+  pinMode(NEpwm, OUTPUT);
+  pinMode(NWpwm, OUTPUT);
   pinMode(NEa, OUTPUT);
   pinMode(NEb, OUTPUT);
   pinMode(NWa, OUTPUT);
@@ -47,6 +66,10 @@ void Motor::init (byte nwa, byte nwb, byte nea, byte neb, byte swa, byte swb, by
 }
 
 void Motor::reset() {
+  digitalWrite(SWpwm, LOW);
+  digitalWrite(NWpwm, LOW);
+  digitalWrite(SEpwm, LOW);
+  digitalWrite(NEpwm, LOW);
   digitalWrite(NEa, LOW);
   digitalWrite(NEb, LOW);
   digitalWrite(NWa, LOW);
@@ -58,19 +81,12 @@ void Motor::reset() {
 }
 
 void Motor::reset(int d) {
-  digitalWrite(NEa, LOW);
-  digitalWrite(NEb, LOW);
-  digitalWrite(NWa, LOW);
-  digitalWrite(NWb, LOW);
-  digitalWrite(SEa, LOW);
-  digitalWrite(SEb, LOW);
-  digitalWrite(SWa, LOW);
-  digitalWrite(SWb, LOW);
+  reset();
   delay(d);
 }
 
 void Motor::test() {
-  Serial.println("Motor.h: I'm alive");
+  Serial.println("Motor.h: Hi, I'm alive");
 }
 
 void Motor::moveToAngle(int angle, int speed) {
@@ -116,98 +132,111 @@ void Motor::moveToAngle(int angle, int speed, int d) {
 }
 
 void Motor::_NE(int id, int speed) {
+  analogWrite(NEpwm, speed);
   if (id == 0) {
-    analogWrite(NEa, speed);
-    analogWrite(NEb, 0);
+    digitalWrite(NEa, 1);
+    digitalWrite(NEb, 0);
     return;
   } else if (id == 1) {
-    analogWrite(NEb, speed);
-    analogWrite(NEa, 0);
+    digitalWrite(NEa, 0);
+    digitalWrite(NEb, 1);
     return;
   }
-  analogWrite(NEa, 0);
-  analogWrite(NEb, 0);
+  analogWrite(NEpwm, LOW);
+  digitalWrite(NEa, LOW);
+  digitalWrite(NEb, LOW);
   Serial.println("Range Error: ID is expected to be or 0 or 1");
 }
 void Motor::_NE(int speed) {
-    if (speed >= 0) {
-    analogWrite(NEa, speed);
-    analogWrite(NEb, 0);
+  analogWrite(NEpwm, speed);
+  if (speed >= 0) {
+    digitalWrite(NEa, 1);
+    digitalWrite(NEb, 0);
   } else {
-    analogWrite(NEb, abs(speed));
-    analogWrite(NEa, 0);
+    digitalWrite(NEa, 0);
+    digitalWrite(NEb, 1);
   }
 }
 
+
 void Motor::_NW(int id, int speed) {
+  analogWrite(NWpwm, speed);
   if (id == 0) {
-    analogWrite(NWa, speed);
-    analogWrite(NWb, 0);
+    digitalWrite(NWa, 1);
+    digitalWrite(NWb, 0);
     return;
   } else if (id == 1) {
-    analogWrite(NWb, speed);
-    analogWrite(NWa, 0);
+    digitalWrite(NWa, 0);
+    digitalWrite(NWb, 1);
     return;
   }
-  analogWrite(NWa, 0);
-  analogWrite(NWb, 0);
+  analogWrite(NWpwm, LOW);
+  digitalWrite(NWa, LOW);
+  digitalWrite(NWb, LOW);
   Serial.println("Range Error: ID is expected to be or 0 or 1");
 }
 void Motor::_NW(int speed) {
+  analogWrite(NWpwm, speed);
   if (speed >= 0) {
-    analogWrite(NWa, speed);
-    analogWrite(NWb, 0);
+    digitalWrite(NWa, 1);
+    digitalWrite(NWb, 0);
   } else {
-    analogWrite(NWb, abs(speed));
-    analogWrite(NWa, 0);
+    digitalWrite(NWa, 0);
+    digitalWrite(NWb, 1);
   }
 }
 
 void Motor::_SE(int id, int speed) {
+  analogWrite(SEpwm, speed);
   if (id == 0) {
-    analogWrite(SEa, speed);
-    analogWrite(SEb, 0);
+    digitalWrite(SEa, 1);
+    digitalWrite(SEb, 0);
     return;
   } else if (id == 1) {
-    analogWrite(SEb, speed);
-    analogWrite(SEa, 0);
+    digitalWrite(SEa, 0);
+    digitalWrite(SEb, 1);
     return;
   }
-  analogWrite(SEa, 0);
-  analogWrite(SEb, 0);
+  analogWrite(SEpwm, LOW);
+  digitalWrite(SEa, LOW);
+  digitalWrite(SEb, LOW);
   Serial.println("Range Error: ID is expected to be or 0 or 1");
 }
 void Motor::_SE(int speed) {
+  analogWrite(SEpwm, speed);
   if (speed >= 0) {
-    analogWrite(SEa, speed);
-    analogWrite(SEb, 0);
+    digitalWrite(SEa, 1);
+    digitalWrite(SEb, 0);
   } else {
-    analogWrite(SEb, abs(speed));
-    analogWrite(SEa, 0);
+    digitalWrite(SEa, 0);
+    digitalWrite(SEb, 1);
   }
 }
 
 void Motor::_SW(int id, int speed) {
+  analogWrite(SWpwm, speed);
   if (id == 0) {
-    analogWrite(SWa, speed);
-    analogWrite(SWb, 0);
+    digitalWrite(SWa, 1);
+    digitalWrite(SWb, 0);
     return;
   } else if (id == 1) {
-    analogWrite(SWb, speed);
-    analogWrite(SWa, 0);
+    digitalWrite(SWa, 0);
+    digitalWrite(SWb, 1);
     return;
   }
-  analogWrite(SWa, 0);
-  analogWrite(SWb, 0);
+  analogWrite(SWpwm, LOW);
+  digitalWrite(SWa, LOW);
+  digitalWrite(SWb, LOW);
   Serial.println("Range Error: ID is expected to be or 0 or 1");
 }
 void Motor::_SW(int speed) {
-    if (speed >= 0) {
-    analogWrite(SWa, speed);
-    analogWrite(SWb, 0);
+  analogWrite(SWpwm, speed);
+  if (speed >= 0) {
+    digitalWrite(SWa, 1);
+    digitalWrite(SWb, 0);
   } else {
-    analogWrite(SWb, abs(speed));
-    analogWrite(SWa, 0);
+    digitalWrite(SWa, 0);
+    digitalWrite(SWb, 1);
   }
 }
 
@@ -268,17 +297,17 @@ void Motor::SouthWest(int speed, int d) {
 }
 
 void Motor::North(int speed) {
+  // qrdMotor.wardOff();
   _NW(0, speed);
   _NE(0, speed);
   _SW(0, speed);
   _SE(0, speed);
 }
 void Motor::North(int speed, int d) {
-  _NW(0, speed);
-  _NE(0, speed);
-  _SW(0, speed);
-  _SE(0, speed);
-  delay(d);
+  long mill = millis();
+  while (mill + d >= millis()) {
+    North(speed);   // Robot must break while when line is detected
+  }
 }
 
 void Motor::South(int speed) {
@@ -367,5 +396,35 @@ void Motor::rotateToAngle0(float initAngle, int speed, bool stop) {
     initAngle = compassMotor.checkAngle();
   }
 
-  if (stop) reset();
+  if (stop) hardReset();
+}
+
+void Motor::hardReset() {
+  digitalWrite(NEa, 1);
+  digitalWrite(NEb, 1);
+  digitalWrite(NEpwm, 255);
+
+  digitalWrite(NWa, 1);
+  digitalWrite(NWb, 1);
+  digitalWrite(NWpwm, 255);
+
+  digitalWrite(SWa, 1);
+  digitalWrite(SWb, 1);
+  digitalWrite(SWpwm, 255);
+
+
+  digitalWrite(SEa, 1);
+  digitalWrite(SEb, 1);
+  digitalWrite(SEpwm, 255);
+}
+
+void Motor::forceStop() {
+  for (int i = 0; i < 400; i++) {
+    if (i % 2 == 0) North(50, 1);
+    else South(50, 1);
+  }
+  for (int i = 0; i < 100; i++) {
+    if (i % 2 == 0) North(1, 1);
+    else South(1, 1);
+  }
 }
