@@ -16,11 +16,16 @@ class Camera {
     int xOrange ();
     int yOrange();
 
-    int ownGoal();
-    int enemyGoal();
+    int xOwnGoal();
+    int xEnemyGoal();
+
+    // int yOwnGoal();
+    // int yEnemyGoal();
 
     int xBlue ();
     int xYellow ();
+    // int yBlue ();
+    // int yYellow();
 };
 
 #endif

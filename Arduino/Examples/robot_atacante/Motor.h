@@ -3,6 +3,7 @@
 
 #include "Utils.h"
 #include "Compass.h"
+#include "Camera.h"
 
 class Motor {
   private:
@@ -20,6 +21,7 @@ class Motor {
     byte SEb;
     Utils utilsMotor;
     Compass compassMotor;
+    Camera cameraMotor;
   public:
     Motor ();
     void init (byte NWpwm, byte NWa, byte NWb, byte NEpwm, byte NEa, byte NEb, byte SWpwm, byte SWa, byte SWb, byte SEpwm, byte SEa, byte SEb);
@@ -30,7 +32,6 @@ class Motor {
 
     void attachUtils (byte buzzer, int width, int height);
     void attachCompass ();
-    void attachQrd (byte n1, byte n2, byte n3, byte n4, byte s1, byte s2, byte s3, byte s4, byte e1, byte e2, byte e3, byte e4, byte w1, byte w2, byte w3, byte w4);
     // Raw movement functions
     void _NW(int id, int speed);
     void _NW(int speed);
@@ -67,10 +68,12 @@ class Motor {
     void TurnLeft(int speed, int d);
     void TurnRight(int speed, int d);
     // Complex movement functions
-    void moveToAngle(int angle, int speed);
-    void moveToAngle(int angle, int speed, int d);
+    void moveToAngle(int initAngle, int angle, int speed);
+    void moveToAngle(int initAngle, int angle, int speed, int d);
     void rotateToAngle(float initAngle, int destinyAngle, int speed, bool stop); // TODO: Incomplete
     void rotateToAngle0(float initAngle, int speed, bool stop);
+
+    // bool goalOutRange(int gcy);
 };
 
 #endif

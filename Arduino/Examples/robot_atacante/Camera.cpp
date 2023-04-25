@@ -43,6 +43,7 @@ int Camera::xOrange () {
   }
 
   ongoing_req = false;
+  delay(2);
   return -1;
 }
 
@@ -59,16 +60,27 @@ int Camera::yOrange () {
   }
 
   ongoing_req = false;
+  delay(2);
   return -1;
 }
 
-int Camera::ownGoal() {
+int Camera::xOwnGoal() {
   return team == "blue" ? xBlue() : xYellow();
 }
 
-int Camera::enemyGoal() {
+int Camera::xEnemyGoal() {
   return team == "blue" ? xYellow() : xBlue();
 }
+
+
+
+// int Camera::yOwnGoal() {
+//   return team == "blue" ? yBlue() : yYellow();
+// }
+
+// int Camera::yEnemyGoal() {
+//   return team == "blue" ? yYellow() : yBlue();
+// }
 
 int Camera::xBlue () {
   if (ongoing_req) return -2;
@@ -83,6 +95,7 @@ int Camera::xBlue () {
   }
 
   ongoing_req = false;
+  delay(2);
   return -1;
 };
 int Camera::xYellow () {
@@ -98,5 +111,41 @@ int Camera::xYellow () {
   }
 
   ongoing_req = false;
+  delay(2);
   return -1;
 };
+
+// int Camera::yYellow () {
+//   if (ongoing_req) return -2;
+//   ongoing_req = true;
+//   Serial1.write("Y");
+//   for (int i = 0; i < 50; i++) {
+//     if (Serial1.available()) {
+//       ongoing_req = false;
+//       return Serial1.readString().toInt();
+//     }
+//     delay(1);
+//   }
+
+//   ongoing_req = false;
+//   delay(2);
+//   return -1;
+// };
+// int Camera::yBlue () {
+//   if (ongoing_req) return -2;
+//   ongoing_req = true;
+//   Serial1.write("B");
+//   for (int i = 0; i < 50; i++) {
+//     if (Serial1.available()) {
+//       ongoing_req = false;
+//       return Serial1.readString().toInt();
+//     }
+//     delay(1);
+//   }
+
+//   ongoing_req = false;
+//   delay(2);
+//   return -1;
+// };
+
+

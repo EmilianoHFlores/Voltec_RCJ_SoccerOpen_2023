@@ -1,44 +1,50 @@
-/*
-  Este programa iniciará un robot sin instrucciones, para ejemplos de funciones del robot referir a Arduino/Examples
-*/
-
-// Para información de las librerías instaladas, referir a Arduino/lib_requirements.txt
-#include <LiquidCrystal_I2C.h>
-
+#include <Wire.h>
 #include "Motor.h"
 #include "Utils.h"
 #include "Camera.h"
 #include "Compass.h"
 #include "Ultrasonic.h"
+#include "Oled.h"
+
+#define TEAM "blue"
+
+#define SCREEN_WIDTH 128
+#define SCREEN_HEIGHT 64
+#define OLED_RESET 4
+
+#define maxSpeed 255
+#define aproachSpeed 225
+#define angleSpeed 150
+#define rotationSpeed 75
+#define positionSpeed 50
+#define lowestSpeed 35
+#define COMPASS_DEVIATION 15
 
 Motor motor;
 Utils utils;
 Camera camera;
 Compass compass;
 Ultrasonic ultrasonic;
-LiquidCrystal_I2C lcd (0x27, 16, 2);
+Oled oled;
 
 void setup() {
   Serial.begin(9600);
+  Serial.println("Starting...");
 
-  lcd.begin(16, 2);
-  lcd.setCursor(0, 0);
-  lcd.print("Iniciando       ");
-  
-  motor.begin(NWa, NWb, NEa, NEb, SWa, SWb, SEa, SEb);
-  camera.begin(camera_baud_rate, camera_timeout);
-  compass.begin(compass_type);
-  ultrasonic.begin(EastEcho, EastTrigger, WestEcho, WestTrigger, SouthEcho, SouthTrigger);
-  utils.begin(buzzer, camera_width, camera_height);
+  oled.begin();
+  oled.print(10, 10, "Starting...");
+  oled.show();
 
-  motor.attachUtils(buzzer, camera_width, camera_height);
-  motor.attachCompass(compass_type);
+  motor.begin(4, 34, 35, 3, 32, 33, 2, 30, 31, 5, 37, 36);
+  motor.attachCompass();
+  motor.attachUtils(53, 320, 240);
 
-  // Delay de 5 segundos antes de iniciar el programa
-  motor.reset(5000);
-}
+  camera.begin(115200, 1, TEAM);
+  utils.begin(53, 320, 240);
+  compass.begin();
 
-void loop () {
-  // Concatenar funciones
-  // Para ejemplos utilizando las librerías, referir a Arduino/Examples
-}
+  motor.reset(5000);  // Wait for NAVX to turn on TODO: Rewrite this function
+  oled.print(0, 0, "Setup finished", 1); oled.show();
+};
+
+void loop() {}

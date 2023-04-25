@@ -59,12 +59,7 @@ void Utils::buzzerDelay(int d) {
 }
 
 int Utils::checkDirection (int x) {
-  if (x > 0) {
-    if (x <= (width / 3)) return 0;
-    if (x > (width / 3) && x < (width / 3) * 2) return 1;
-    if (x >= ((width / 3) * 2)) return 2;
-  }
-  return -1;
+  return checkPreciseDirection(x, 3);
 }
 
 int Utils::checkPreciseDirection(int x, int splits) {
@@ -93,4 +88,20 @@ float Utils::circle360(float angle) {
     return angle + 360;
   }
   return angle > 0 ? 360 - angle : 360 + angle;  
+}
+
+bool Utils::inRange(int minValue, int maxValue, int value, bool orEqual) {
+  if (orEqual) {
+    return ((minValue <= value) && (value <= maxValue)); 
+  }
+  return ((minValue < value) && (value < maxValue));
+}
+
+bool Utils::inRangeCompass(float _i, int _d, int deviation) {
+  int d = 0;
+  int d_min = d - deviation;
+  int d_max = d + deviation;
+  float i = _d - _i;
+  if ((d_min < i) && (i < d_max)) return true;
+  return false;
 }

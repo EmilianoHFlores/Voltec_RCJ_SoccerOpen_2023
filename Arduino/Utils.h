@@ -19,6 +19,8 @@ class Utils {
     int checkPreciseDirection (int x, int splits);
     float to360angle (float angle);
     float circle360 (float angle);
+    bool inRange(int minValue, int maxValue, int value, bool orEqual);
+    bool inRangeCompass(float _i, int _d, int deviation);
 };
 
 #endif

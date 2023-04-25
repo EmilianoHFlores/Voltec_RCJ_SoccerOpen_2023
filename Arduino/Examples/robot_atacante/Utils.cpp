@@ -96,3 +96,12 @@ bool Utils::inRange(int minValue, int maxValue, int value, bool orEqual) {
   }
   return ((minValue < value) && (value < maxValue));
 }
+
+bool Utils::inRangeCompass(float _i, int _d, int deviation) {
+  int d = 0;
+  int d_min = d - deviation;
+  int d_max = d + deviation;
+  float i = _d - _i;
+  if ((d_min < i) && (i < d_max)) return true;
+  return false;
+}
