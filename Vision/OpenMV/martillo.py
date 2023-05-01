@@ -2,7 +2,6 @@
 
 # This piece of code is used when robot's team is YELLOW, Blue goal will be undetectable under this code
 # MADE FOR YELLOW GOAL
-
 import sensor, image, time
 from pyb import UART, LED
 
@@ -21,13 +20,6 @@ def turnOnLeds():
     green_led.on();
     blue_led.on();
 
-i = 0;
-while (i <= 10):
-    i += 1;
-    turnOnLeds();
-    time.sleep(.1);
-    turnOffLeds();
-    time.sleep(.1);
 
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
@@ -36,12 +28,11 @@ sensor.set_hmirror(True)
 sensor.skip_frames(time = 2000)
 
 # Disable automatic settings
-# Set rgb values of white balance (pump blue up)
 sensor.set_auto_whitebal(False, (0,2,128))
 sensor.set_auto_gain(False, gain_db = 0)
 
 # Set exposure, gain, brightness, contrast, and white balance values
-sensor.set_auto_exposure(False, exposure_us=1250) # adjust as needed
+sensor.set_auto_exposure(False, exposure_us=5000) # adjust as needed
 sensor.set_brightness(1) # adjust as needed
 sensor.set_contrast(1) # adjust as needed
 sensor.set_saturation(3) # adjust as needed
@@ -50,9 +41,10 @@ clock = time.clock()
 uart = UART(3, 115200, timeout_char=1000)                         # init with given baudrate
 uart.init(115200, bits=8, parity=None, stop=1, timeout_char=1) # init with given parameters
 
-threshold_orange = [(52, 66, -2, 92, 56, 79)]
-threshold_blue = [(17, 33, -28, 0, -32, -3)]
-threshold_yellow = [(23, 39, 9, 37, 31, 56)]
+threshold_orange = [(23, 46, 43, 70, 35, 66)]
+threshold_blue = [(100, 100, 127, 127, 127, 127)]
+threshold_yellow = [(100, 100, 127, 127, 127, 127)]
+
 SHOW_IMAGE_DECORATIONS = True
 TURN_ON_LEDS = True
 
@@ -63,8 +55,8 @@ bx = 0;
 oy = 0;
 
 def distance(y):
-    if y == -1:    return -1;
-    elif y >= 181:    return 0
+    if y == -1: return -1;
+    elif y >= 181: return 0
     elif y >= 152:    return 5
     elif y >= 124:    return 10
     elif y >= 105:    return 15
@@ -85,33 +77,29 @@ def distance(y):
     elif y >= 48:    return 90
     elif y >= 47:    return 95
     elif y >= 46:    return 100
-    else:    return -1
 
 
 while(True):
     clock.tick()
     img = sensor.snapshot().rotation_corr(x_rotation = 180)
 
-    oBlobs = img.find_blobs(threshold_orange, pixels_threshold=3, area_threshold=1, merge=False)
+    oBlobs = img.find_blobs(threshold_orange, pixels_threshold=1, area_threshold=1, merge=False)
     if oBlobs:
         oBlob = max(oBlobs, key=lambda b: b.area())
-        if (oBlob.roundness() > .1):
+        if (oBlob.roundness() > 0):
             if (SHOW_IMAGE_DECORATIONS):    img.draw_circle(oBlob.enclosing_circle(), color=(img.get_pixel(oBlob.cx(), oBlob.cy())), thickness=3)
             ox = oBlob.cx()
             oy = oBlob.cy()
     else:
         ox = -1;
-        oy = -1;
 
     yBlobs = img.find_blobs(threshold_yellow, pixels_threshold=130, area_threshold=100, merge=True)
     if yBlobs:
         yBlob = max(yBlobs, key=lambda b: b.area())
         if (SHOW_IMAGE_DECORATIONS):    img.draw_rectangle(yBlob.rect(), color=(img.get_pixel(yBlob.cx(), yBlob.cy())), thickness=3)
         yx = yBlob.cx()
-        yy = yBlob.cy();
     else:
         yx = -1;
-        yy = -1;
 
 
 
@@ -120,10 +108,8 @@ while(True):
         bBlob = max(bBlobs, key=lambda b: b.area())
         if (SHOW_IMAGE_DECORATIONS):    img.draw_rectangle(bBlob.rect(), color=(img.get_pixel(bBlob.cx(), bBlob.cy())), thickness=3)
         bx = bBlob.cx()
-        by = bBlob.cy();
     else:
         bx = -1;
-        by = -1;
 
 
     turnOffLeds();
@@ -134,8 +120,20 @@ while(True):
         if (bx >= 0):    blue_led.on(); green_led.off(); red_led.off();
         if (ox >= 0 and bx >= 0):    blue_led.on(); red_led.on(); green_led.off();
         if (ox + yx + bx == -3):    green_led.on(); red_led.off(); blue_led.off();
+        if uart.any():
+            read = uart.read(1)
+            if read == bytes("o", "ascii"):
+                uart.write(f"{ox}")
+            if read == bytes("b", "ascii"):
+                uart.write(f"{bx}")
+            if read == bytes("y", "ascii"):
+                uart.write(f"{yx}")
+            if read == bytes("O", "ascii"):
+                uart.write(f"{distance(oy)}")
+
     if uart.any():
         read = uart.read(1)
+        # print(read)
         if read == bytes("o", "ascii"):
             uart.write(f"{ox}")
         if read == bytes("b", "ascii"):
@@ -144,3 +142,5 @@ while(True):
             uart.write(f"{yx}")
         if read == bytes("O", "ascii"):
             uart.write(f"{distance(oy)}")
+
+

@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "Motor.h"
 
-#define COMPASS_DEVIATION 10
+#define COMPASS_DEVIATION 20
 
 Motor::Motor() {
   this -> NWa = 0;
@@ -367,6 +367,7 @@ void Motor::rotateToAngle(float _i, int _d, int speed, bool stop) {
   int d_min = d - COMPASS_DEVIATION;
   int d_max = d + COMPASS_DEVIATION;
   float i = _d - _i;
+
   if ((d_min < i) && (i < d_max)) {
     if (stop) hardReset();
     return;

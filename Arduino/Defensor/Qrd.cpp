@@ -56,9 +56,7 @@ void Qrd::test() {
   Serial.println("Qrd.h: I'm Alive");
 }
 
-void Qrd::attachCompass() {
-  QRDcompass.begin();
-}
+void Qrd::attachCompass() {}
 
 void Qrd::attachUtils(byte buzzer, int width, int height) {
   QRDutils.begin(buzzer, width, height);
