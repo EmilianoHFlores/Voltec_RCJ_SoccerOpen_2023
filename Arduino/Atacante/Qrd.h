@@ -1,5 +1,4 @@
 #include "Compass.h"
-#include "Utils.h"
 #include "Oled.h"
 
 #ifndef QRD_H
@@ -19,7 +18,6 @@
 class Qrd {
   private:
     Compass QRDcompass;
-    Utils QRDutils;
     Oled QRDoled;
   public:
     Qrd();
@@ -29,9 +27,8 @@ class Qrd {
     void reset ();
     void test ();
 
-    void attachUtils(byte buzzer, int width, int height);
     void setThresholds();
-    void attachCompass();
+    void attachCompass(String type);
 
     bool North();
     // bool South();

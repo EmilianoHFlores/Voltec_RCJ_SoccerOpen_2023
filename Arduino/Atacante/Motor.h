@@ -1,7 +1,6 @@
 #ifndef MOTOR_H
 #define MOTOR_H
 
-#include "Utils.h"
 #include "Compass.h"
 #include "Camera.h"
 
@@ -19,7 +18,6 @@ class Motor {
     byte SEpwm;
     byte SEa;
     byte SEb;
-    Utils utilsMotor;
     Compass compassMotor;
     Camera cameraMotor;
   public:
@@ -30,8 +28,7 @@ class Motor {
     void test();
     void begin (byte NWpwm, byte NWa, byte NWb, byte NEpwm, byte NEa, byte NEb, byte SWpwm, byte SWa, byte SWb, byte SEpwm, byte SEa, byte SEb);
 
-    void attachUtils (byte buzzer, int width, int height);
-    void attachCompass ();
+    void attachCompass (String type);
     // Raw movement functions
     void _NW(int id, int speed);
     void _NW(int speed);

@@ -56,8 +56,8 @@ void Qrd::test() {
   Serial.println("Qrd.h: I'm Alive");
 }
 
-void Qrd::attachCompass() {
-  QRDcompass.begin();
+void Qrd::attachCompass(String type) {
+  QRDcompass.begin(type);
 }
 
 void Qrd::setThresholds() {
@@ -65,10 +65,6 @@ void Qrd::setThresholds() {
   N2_min = N2_min_avg(2) - 1;
   N3_min = N3_min_avg(2) - 1;
   N4_min = N4_min_avg(2) - 1;
-}
-
-void Qrd::attachUtils(byte buzzer, int width, int height) {
-  QRDutils.begin(buzzer, width, height);
 }
 
 int Qrd::wardOff() {
@@ -81,11 +77,6 @@ bool Qrd::North() {
   int result = (n1_ + n2_ + n3_ + n4_) > 0;
   return result;
 }
-
-// bool Qrd::South() { return ((inS1() + inS2() + inS3() + inS4()) > 1); }
-// bool Qrd::East() { return ((inE1() + inE2() + inE3() + inE4()) > 1); }
-// bool Qrd::West() { return ((inW1() + inW2() + inW3 ()+ inW4()) > 1); }
-// bool Qrd::isInLine() { return ((West() + North() + East() + South()) > 0); }
 
 bool Qrd::inN1() {
   return N1_min > _N1();

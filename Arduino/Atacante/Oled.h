@@ -17,7 +17,7 @@ class Oled {
     void print(int x, int y, int data, int size);
     void print(int x, int y, float data, int size);
     void print(int x, int y, String data, int size);
-
+    void print(int x, int y, long unsigned data, int size);
     void show();
     Adafruit_SSD1306 display();
 };

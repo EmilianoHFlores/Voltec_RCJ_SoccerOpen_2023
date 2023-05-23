@@ -76,6 +76,13 @@ void Oled::print(int x, int y, String data, int size) {
   dspy.setTextSize(size);
   dspy.print(data);
 }
+void Oled::print(int x, int y, long unsigned data, int size) {
+  dspy.setTextColor(OLEDa);
+  dspy.setCursor(x, y);
+  dspy.setTextSize(size);
+  dspy.print(data);
+}
+
 
 void Oled::show() {
   dspy.display();

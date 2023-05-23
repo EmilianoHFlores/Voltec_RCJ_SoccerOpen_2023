@@ -6,26 +6,23 @@ class Camera {
     String team;
     long baud;
     int timeout;
+    int width;
+    int height;
   public:
     Camera ();
-    void init (long bd, int tmo, String TEAM);
+    void init (String TEAM);
     void reset();
     void test ();
-    void begin (long bd, int tmo, String TEAM);
+    void begin (String TEAM);
 
+    int direction(int value, int splits);
+    int intercept();
     int xOrange ();
     int yOrange();
-
-    int xOwnGoal();
     int xEnemyGoal();
-
-    // int yOwnGoal();
-    // int yEnemyGoal();
 
     int xBlue ();
     int xYellow ();
-    // int yBlue ();
-    // int yYellow();
 };
 
 #endif

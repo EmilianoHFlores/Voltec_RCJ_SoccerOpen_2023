@@ -2,6 +2,7 @@
 #include "Motor.h"
 
 #define COMPASS_DEVIATION 20
+const int pwmDeviation = 0;
 
 Motor::Motor() {
   this -> NWa = 0;
@@ -22,12 +23,8 @@ void Motor::begin(byte nwpwm, byte nwa, byte nwb, byte nepwm, byte nea, byte neb
   init (nwpwm, nwa, nwb, nepwm, nea, neb, swpwm, swa, swb, sepwm, sea, seb);
 }
 
-void Motor::attachUtils (byte buzzer, int width, int height) {
-  utilsMotor.begin(buzzer, width, height);
-}
-
-void Motor::attachCompass () {
-  compassMotor.begin();
+void Motor::attachCompass (String type) {
+  compassMotor.begin(type);
 }
 
 
@@ -113,7 +110,7 @@ void Motor::moveToAngle(int initAngle, int angle, int speed, int d) {
 }
 
 void Motor::_NE(int id, int speed) {
-  analogWrite(NEpwm, speed);
+  analogWrite(NEpwm, speed - pwmDeviation);
   if (id == 0) {
     digitalWrite(NEa, 1);
     digitalWrite(NEb, 0);
@@ -129,7 +126,7 @@ void Motor::_NE(int id, int speed) {
   Serial.println("Range Error: ID is expected to be or 0 or 1");
 }
 void Motor::_NE(int speed) {
-  analogWrite(NEpwm, abs(speed));
+  analogWrite(NEpwm, abs(speed) - pwmDeviation);
   if (speed >= 0) {
     digitalWrite(NEa, 1);
     digitalWrite(NEb, 0);
@@ -195,7 +192,7 @@ void Motor::_SE(int speed) {
 }
 
 void Motor::_SW(int id, int speed) {
-  analogWrite(SWpwm, speed);
+  analogWrite(SWpwm, speed - pwmDeviation);
   if (id == 0) {
     digitalWrite(SWa, 1);
     digitalWrite(SWb, 0);
@@ -211,7 +208,7 @@ void Motor::_SW(int id, int speed) {
   Serial.println("Range Error: ID is expected to be or 0 or 1");
 }
 void Motor::_SW(int speed) {
-  analogWrite(SWpwm, abs(speed));
+  analogWrite(SWpwm, abs(speed) - pwmDeviation);
   if (speed >= 0) {
     digitalWrite(SWa, 1);
     digitalWrite(SWb, 0);
@@ -367,7 +364,6 @@ void Motor::rotateToAngle(float _i, int _d, int speed, bool stop) {
   int d_min = d - COMPASS_DEVIATION;
   int d_max = d + COMPASS_DEVIATION;
   float i = _d - _i;
-
   if ((d_min < i) && (i < d_max)) {
     if (stop) hardReset();
     return;
