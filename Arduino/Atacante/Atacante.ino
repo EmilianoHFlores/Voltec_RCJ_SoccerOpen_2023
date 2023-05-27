@@ -2,28 +2,25 @@
 #include "Compass.h"
 #include "Motor.h"
 #include "Oled.h"
-#include "Ultrasonic.h"
 #define TEAM "blue"
-#define defaultSpeed 125
-#define fastRotationSpeed 75
-#define rotationSpeed 60
-#define positionSpeed 30
+#define defaultSpeed 100
+#define scoreSpeed 50
+#define fastRotationSpeed 60
+#define rotationSpeed 50
+#define positionSpeed 35
+#define horizontalSpeed 60
+#define lowestSpeed 30
 const int Button = 7;
 int i = 0;
-int ocx = 0;
-int ocy = 0;
-int gxi = 0;
-int gcy = 0;
 int seen = 0;
 int ball_angle = -1;
 Camera camera;
 Oled oled;
 Motor motor;
 Compass compass;
-Ultrasonic ultrasonic;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("Starting...");
   oled.begin();
   oled.print(0, 0, "Starting...", 2); oled.show();
@@ -32,12 +29,11 @@ void setup() {
 
   camera.begin(TEAM);
   compass.begin("navx");
+  delay(1500);
   motor.begin(2, 30, 31, 3, 32, 33, 5, 36, 37, 4, 35, 34);
-  ultrasonic.begin(53, 53, 53, 53, 53, 53);
-
   // Subclasses
   motor.attachCompass("navx");
-
+  // motor.attachQrd(A9, A8, A10, A11,   A3, A0, A2, A1,    A7, A4, A6, A5,    A15, A12, A14, A13);
   unsigned long mill = millis();
   for (;;) {
     if (millis() - mill >= 5000) break;
@@ -48,7 +44,7 @@ void setup() {
   }
 
   oled.print(0, 0, "Ready", 3); oled.show();
-  while (!digitalRead(Button));
+  // while (!digitalRead(Button));
   oled.print(0, 0, "Started", 3); oled.show();
 };
 
@@ -56,67 +52,174 @@ int step = -1;
 
 void loop() {
   if (step == -1) {
-    ocx = camera.xOrange();
-    oled_log("centering ball");
-    switch (camera.direction(ocx, 7)) {
+    camera.add("ox");
+    camera.call();
+    oled_log();
+    switch (camera.direction(camera.ox(), 7)) {
     case 0: motor.TurnLeft(fastRotationSpeed); seen = 0; break;
-    case 1: motor.TurnLeft(rotationSpeed); seen = 0; break;
-    case 2: motor.TurnLeft(positionSpeed); seen = 0; break;
-    case 3: motor.hardReset(); step = 0; ball_angle = compass.checkAngle(); break;
-    case 4: motor.TurnRight(positionSpeed);  seen = 1; break;
-    case 5: motor.TurnRight(rotationSpeed); seen = 1; break;
+    case 1: motor.TurnLeft(positionSpeed); seen = 0; break;
+    case 2: motor.TurnLeft(lowestSpeed); seen = 0; break;
+    case 3: motor.hardReset(); step = 0; break;
+    case 4: motor.TurnRight(lowestSpeed);  seen = 1; break;
+    case 5: motor.TurnRight(positionSpeed); seen = 1; break;
     case 6: motor.TurnRight(fastRotationSpeed); seen = 1; break;
     default: seen ? motor.TurnRight(fastRotationSpeed) : motor.TurnLeft(fastRotationSpeed); break;
     }
   }
-
   if (step == 0) {
-    gxi = camera.intercept();
-    oled_log("Checking intercept");
-    if (gxi) step = 1;
-    else step = -1;
+    ball_angle = compass.checkAngle();
+    camera.add("yi");
+    camera.call();
+    oled_log();
+    if (camera.yi()) step = 1;
+    else step = 2;
   }
 
   if (step == 1) {
-    oled.print(0, 0, "Follow ball"); oled.show();
+    camera.del();
+    oled_log();
     follow_ball();
     step = -1;
+  }
+
+  if (step == 2) {
+    camera.add("yi");
+    camera.add("ox");
+    camera.call();
+    oled_log();
+    if (camera.yi()) { step = 1; return; };
+    if (compass.range(compass.checkAngle(), 0, 15)) { step = 3; return; };
+    switch (camera.direction(camera.ox(), 9)) {
+    case 0: motor.TurnLeft(rotationSpeed); break;
+    case 1: motor.TurnLeft(positionSpeed); break;
+    case 2: motor.TurnLeft(lowestSpeed); break;
+    case 3: motor.moveToAngle(compass.checkAngle(), ball_angle > 0 ? 45 : -45, defaultSpeed); break;
+    case 4: motor.moveToAngle(compass.checkAngle(), ball_angle > 0 ? 90 : -90, defaultSpeed); break;
+    case 5: motor.moveToAngle(compass.checkAngle(), ball_angle > 0 ? 45 : -45, defaultSpeed); break;
+    case 6: motor.TurnRight(lowestSpeed); break;
+    case 7: motor.TurnRight(positionSpeed); break;
+    case 8: motor.TurnRight(rotationSpeed); break;
+    default: step = -1;
+    }
+  }
+
+  if (step == 3) {
+    camera.add("ox");
+    camera.add("yi");
+    camera.call();
+    oled_log();
+    if (camera.yi()) { step = 1; return; };
+    switch (camera.direction(camera.ox(), 13)) {
+    case 0:
+    case 1:
+      motor.moveToAngle(0, -90, defaultSpeed);
+      break;
+    case 2:
+    case 3:
+      motor.moveToAngle(0, -90, horizontalSpeed);
+      break;
+    case 4:
+    case 5:
+      motor.moveToAngle(0, -90, positionSpeed);
+      break;
+    case 6:
+      motor.hardReset(); step = 4; break;
+    case 7:
+    case 8:
+      motor.moveToAngle(0, 90, positionSpeed);
+      break;
+    case 9:
+    case 10:
+      motor.moveToAngle(0, 90, horizontalSpeed);
+      break;
+    case 11:
+    case 12:
+      motor.moveToAngle(0, 90, defaultSpeed);
+      break;
+    default: 
+      motor.hardReset();
+      step = -1;
+      break;
+    }
+  }
+
+  if (step == 4) {
+    camera.add("yx");
+    camera.add("yi");
+    camera.add("ox");
+    camera.call();
+    if (camera.ox() == -1) { step = -1; return; }
+    if (camera.yi()) { step = -1; return; }
+    if (camera.direction(camera.yx(), 3) == 0) motor.moveToAngle(0, 90, positionSpeed);
+    else if (camera.direction(camera.yx(), 3) == 2) motor.moveToAngle(0, -90, positionSpeed);
+    else step = 1; // If goal is not visible, then throw the ball outside of the field (this may happen because a robot is blocking the goal)
   }
 
   i++;
 }
 
-void oled_log(String name) {
-  oled.print(0, 0, name, 1); oled.print(90, 0, i, 1);
-  oled.print(0, 15, "OCX: ", 1); oled.print(60, 15, ocx, 1);
+void reset() {
+  ball_angle = -1;
+  step = -1;
+}
+
+void oled_log() {
+  oled.print(0, 0, "step", 1); oled.print(40, 0, step, 1); oled.print(90, 0, i, 1);
+  oled.print(0, 15, "OCX: ", 1); oled.print(60, 15, camera.ox(), 1);
   oled.print(0, 30, "DEG: ", 1); oled.print(60, 30, compass.checkAngle(), 1);
-  oled.print(0, 45, "GXI: ", 1); oled.print(60, 45, gxi, 1);
+  oled.print(0, 45, "GXI: ", 1); oled.print(60, 45, camera.yi(), 1);
   oled.show();
 }
 
 void follow_ball() {
-  ocx = camera.xOrange();
-  int to_move_angle = -1;
-  switch (camera.direction(ocx, 5)) {
-  case 0: to_move_angle = 45; break;
-  case 1: to_move_angle = 15; break;
-  case 2: to_move_angle = 0; break;
-  case 3: to_move_angle = -15; break;
-  case 4: to_move_angle = -45; break;
-  case -1: break;
-  }
-  oled.print(0, 0, "to: ", 3); oled.print(0, 32, to_move_angle, 3);
-  oled.show();
-  if (to_move_angle == -1) {
-    motor.hardReset();
-    return;
-  }
-  motor.moveToAngle(0, to_move_angle, defaultSpeed);
-  ocy = camera.yOrange();
-  if (ocy == 0) {
-    motor.moveToAngle(0, 0, defaultSpeed, 500);
-    motor.moveToAngle(0, 180, defaultSpeed, 500);
-    return;
+  camera.del();
+  camera.add("yi");
+  camera.add("ox");
+  camera.call(true);
+  oled.print(0, 0, "ox: ", 3); oled.print(64, 0, camera.ox(), 3);
+  if (!camera.yi()) return;
+  switch (camera.direction(camera.ox(), 9)) {
+    case 0: case 1: motor.TurnLeft(positionSpeed); seen = 0; break;
+    case 2: case 3: motor.TurnLeft(lowestSpeed); seen = 0; break;
+    case 4: motor.North(scoreSpeed); break;
+    case 5: case 6: motor.TurnRight(lowestSpeed);  seen = 1; break;
+    case 7: case 8: motor.TurnRight(positionSpeed); seen = 1; break;
+    default: return;
   }
   follow_ball();
 }
+
+
+
+/* QRD SOUTH VALUES
+
+  Serial.print("South:");
+  Serial.println();
+
+  Serial.println();
+  Serial.println();
+  Serial.println();
+
+  Serial.print("inS1: ");
+  Serial.print(qrd.inS1());
+  Serial.print(" - S1: ");
+  Serial.println(qrd._S1());
+
+  Serial.print("inS2: ");
+  Serial.print(qrd.inS2());
+  Serial.print(" - S2: ");
+  Serial.println(qrd._S2());
+
+  Serial.print("inS3: ");
+  Serial.print(qrd.inS3());
+  Serial.print(" - S3: ");
+  Serial.println(qrd._S3());
+
+  Serial.print("inS4: ");
+  Serial.print(qrd.inS4());
+  Serial.print(" - S4: ");
+  Serial.println(qrd._S4());
+
+  delay(50);
+
+*/

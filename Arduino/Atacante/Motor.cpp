@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "Motor.h"
 
-#define COMPASS_DEVIATION 20
+#define COMPASS_DEVIATION 15
 const int pwmDeviation = 0;
 
 Motor::Motor() {
@@ -27,6 +27,10 @@ void Motor::attachCompass (String type) {
   compassMotor.begin(type);
 }
 
+void Motor::attachQrd (byte n1, byte n2, byte n3, byte n4, byte s1, byte s2, byte s3, byte s4, byte e1, byte e2, byte e3, byte e4, byte w1, byte w2, byte w3, byte w4) {
+  qrdMotor.begin(n1, n2, n3, n4, s1, s2, s3, s4, e1, e2, e3, e4, w1, w2, w3, w4);
+  qrdMotor.getThresholds();
+}
 
 void Motor::init (byte nwpwm, byte nwa, byte nwb, byte nepwm, byte nea, byte neb, byte swpwm, byte swa, byte swb, byte sepwm, byte sea, byte seb) {
   NWpwm = nwpwm;
@@ -54,6 +58,8 @@ void Motor::init (byte nwpwm, byte nwa, byte nwb, byte nepwm, byte nea, byte neb
   pinMode(SEb, OUTPUT);
   pinMode(SWa, OUTPUT);
   pinMode(SWb, OUTPUT);
+
+  oledMotor.begin();
 }
 
 void Motor::reset() {
@@ -81,6 +87,7 @@ void Motor::test() {
 }
 
 void Motor::moveToAngle(int initAngle, int angle, int speed) {
+  wardOff();
   int NW_speed = speed * cos((PI / 180) * (angle + 315));
   int SW_speed = speed * cos((PI / 180) * (angle + 225));
   int SE_speed = speed * cos((PI / 180) * (angle + 135));
@@ -219,62 +226,63 @@ void Motor::_SW(int speed) {
 }
 
 void Motor::NorthWest(int speed) {
+  wardOff();
   _NE(0, speed);
   _SW(0, speed);
   _NW(0, 0);
   _SE(0, 0);
 }
 void Motor::NorthWest(int speed, int d) {
-  _NE(0, speed);
-  _SW(0, speed);
-  _NW(0, 0);
-  _SE(0, 0);
-  delay(d);
+  long mill = millis();
+  while (mill + d >= millis()) {
+    NorthWest(speed);
+  }
 }
 
 void Motor::NorthEast(int speed) {
+  wardOff();
   _NW(0, speed);
   _SE(0, speed);
   _NE(0, 0);
   _SW(0, 0);
 }
 void Motor::NorthEast(int speed, int d) {
-  _NW(0, speed);
-  _SE(0, speed);
-  _NE(0, 0);
-  _SW(0, 0);
-  delay(d);
+  long mill = millis();
+  while (mill + d >= millis()) {
+    NorthEast(speed);
+  }
 }
 
 void Motor::SouthEast(int speed) {
+  wardOff();
   _NE(1, speed);
   _SW(1, speed);
   _NW(0, 0);
   _SE(0, 0);
 }
 void Motor::SouthEast(int speed, int d) {
-  _NE(1, speed);
-  _SW(1, speed);
-  _NW(0, 0);
-  _SE(0, 0);
-  delay(d);
+  long mill = millis();
+  while (mill + d >= millis()) {
+    SouthEast(speed);
+  }
 }
 
 void Motor::SouthWest(int speed) {
+  wardOff();
   _NW(1, speed);
   _SE(1, speed);
   _NE(0, 0);
   _SW(0, 0);
 }
 void Motor::SouthWest(int speed, int d) {
-  _NW(1, speed);
-  _SE(1, speed);
-  _NE(0, 0);
-  _SW(0, 0);
-  delay(d);
+  long mill = millis();
+  while (mill + d >= millis()) {
+    SouthWest(speed);
+  }
 }
 
 void Motor::North(int speed) {
+  wardOff();
   _NW(0, speed);
   _NE(0, speed);
   _SW(0, speed);
@@ -288,45 +296,45 @@ void Motor::North(int speed, int d) {
 }
 
 void Motor::South(int speed) {
+  wardOff();
   _NW(1, speed);
   _NE(1, speed);
   _SW(1, speed);
   _SE(1, speed);
 }
 void Motor::South(int speed, int d) {
-  _NW(1, speed);
-  _NE(1, speed);
-  _SW(1, speed);
-  _SE(1, speed);
-  delay(d);
+  long mill = millis();
+  while (mill + d >= millis()) {
+    South(speed);
+  }
 }
 
 void Motor::East(int speed) {
+  wardOff();
   _NW(0, speed);
   _NE(1, speed);
   _SW(1, speed);
   _SE(0, speed);
 }
 void Motor::East(int speed, int d) {
-  _NW(0, speed);
-  _NE(1, speed);
-  _SW(1, speed);
-  _SE(0, speed);
-  delay(d);
+  long mill = millis();
+  while (mill + d >= millis()) {
+    East(speed);
+  }
 }
 
 void Motor::West(int speed) {
+  wardOff();
   _NW(1, speed);
   _NE(0, speed);
   _SW(0, speed);
   _SE(1, speed);
 }
 void Motor::West(int speed, int d) {
-  _NW(1, speed);
-  _NE(0, speed);
-  _SW(0, speed);
-  _SE(1, speed);
-  delay(d);
+  long mill = millis();
+  while (mill + d >= millis()) {
+    West(speed);
+  }
 }
 
 void Motor::TurnLeft(int speed) {
@@ -403,12 +411,31 @@ void Motor::forceStop() {
   }
 }
 
-// bool Motor::goalOutRange(int gcy) {
-//   if (gcy == -1) return false;
-//   else if (gcy <= 30) {
-//     rotateToAngle(compassMotor.checkAngle(), 0, 75, true);
-//     moveToAngle(compassMotor.checkAngle(), 180, 255, 1000);
-//     return true;
-//   }
-//   return false;
-// }
+void Motor::wardOff() {
+  // int delayTime = 350;
+  // switch (qrdMotor.wardOff()) {
+  // case 0:
+  //   oledMotor.print(0, 0, "LINE INTERRUPT", 3); oledMotor.show();
+  //   South(maxSpeed);
+  //   delay(delayTime);
+  //   break;
+  // case 1:
+  //   oledMotor.print(0, 0, "LINE INTERRUPT", 3); oledMotor.show();
+  //   hardReset();
+  //   North(maxSpeed);
+  //   delay(delayTime);
+  //   break;
+  // case 2:
+  //   oledMotor.print(0, 0, "LINE INTERRUPT", 3); oledMotor.show();
+  //   hardReset();
+  //   West(maxSpeed);
+  //   delay(delayTime);
+  //   break;
+  // case 3:
+  //   oledMotor.print(0, 0, "LINE INTERRUPT", 3); oledMotor.show();
+  //   hardReset();
+  //   East(maxSpeed);
+  //   delay(delayTime);
+  //   break;
+  // }
+}
