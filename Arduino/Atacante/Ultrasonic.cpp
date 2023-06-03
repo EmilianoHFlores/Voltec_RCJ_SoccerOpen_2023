@@ -15,11 +15,7 @@ Ultrasonic::Ultrasonic () {
 
 }
 
-void Ultrasonic::begin(byte eche, byte trige, byte echw, byte trigw, byte echs, byte trigs) {
-  init (eche, trige, echw, trigw, echs, trigs);
-}
-
-void Ultrasonic::init (byte eche, byte trige, byte echw, byte trigw, byte echs, byte trigs) {
+void Ultrasonic::begin (byte eche, byte trige, byte echw, byte trigw, byte echs, byte trigs) {
   this -> EchoE = eche;
   this -> TriggerE = trige;
   this -> EchoW = echw;
@@ -33,17 +29,6 @@ void Ultrasonic::init (byte eche, byte trige, byte echw, byte trigw, byte echs, 
   pinMode(TriggerW, OUTPUT);
   pinMode(EchoS, INPUT);
   pinMode(TriggerS, OUTPUT);
-  reset();
-}
-
-void Ultrasonic::reset() {
-  digitalWrite(TriggerE, LOW);
-  digitalWrite(TriggerW, LOW);
-  digitalWrite(TriggerS, LOW);
-}
-
-void Ultrasonic::test() {
-  Serial.println("Ultrasonic.h: I'm Alive");
 }
 
 float Ultrasonic::East() {

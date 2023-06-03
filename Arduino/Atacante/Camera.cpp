@@ -8,27 +8,11 @@ Camera::Camera () {
   this -> timeout = 2;
   this -> width = 320;
   this -> height = 240;
-  this -> team = "";
 }
 
-void Camera::begin(String TEAM) {
-  init (TEAM);
-}
-
-void Camera::init(String TEAM) {
-  team = TEAM;
+void Camera::begin() {
   Serial1.begin(baud);
   Serial1.setTimeout(timeout);
-}
-
-void Camera::reset () {
-  Serial1.end();
-  Serial1.begin(baud);
-  Serial1.setTimeout(timeout);
-}
-
-void Camera::test () {
-  Serial.println("Camera.h: I'm Alive");
 }
 
 int Camera::direction(int value, int splits) {
@@ -56,21 +40,6 @@ void Camera::call() {
   save(read);
 }
 
-void Camera::call(bool log) {
-  unsigned long mill = millis();
-  Serial1.println(queryString);
-  String read = "";
-  for (int i = 0; i < 100; i++) {
-    if (Serial1.available()) {
-      read = Serial1.readString();
-      if (log) Serial.println(read);
-      break;
-    }
-    delay(1);
-  }
-  save(read);
-}
-
 void Camera::del() {
   querySize = 0;
   queryString = "";
@@ -84,7 +53,6 @@ void Camera::add(String string) {
   if (includes(query, NUMITEMS(query), string)) return;
   querySize++;
   queryString += string;
-  Serial.println(queryString);
 }
 
 void Camera::save(String result) {

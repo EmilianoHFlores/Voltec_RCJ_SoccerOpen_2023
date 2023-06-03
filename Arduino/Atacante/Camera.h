@@ -3,7 +3,6 @@
 
 class Camera {
   private:
-    String team;
     long baud;
     int timeout;
     int width;
@@ -23,18 +22,13 @@ class Camera {
     bool includes(String arr[], int len, String target);
   public:
     Camera ();
-    void init (String TEAM);
-    void reset();
-    void test ();
-    void begin (String TEAM);
+    void begin ();
 
     int direction(int value, int splits);
 
-    void call();
-    void call(bool log);
-
     void del();
     void add(String string);
+    void call();
     void save(String result);
 
     int ox () { return _ox; };

@@ -11,9 +11,6 @@ class Ultrasonic {
     byte TriggerS;
   public:
     Ultrasonic ();
-    void init (byte EchoE, byte TriggerE, byte EchoW, byte TriggerW, byte EchoS, byte TriggerS);
-    void reset ();
-    void test ();
     void begin (byte EchoE, byte TriggerE, byte EchoW, byte TriggerW, byte EchoS, byte TriggerS);
 
     float East();
