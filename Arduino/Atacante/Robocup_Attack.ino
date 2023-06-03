@@ -2,7 +2,6 @@
 #include "Compass.h"
 #include "Motor.h"
 #include "Oled.h"
-#include "Ultrasonic.h"
 #include "Xbee.h"
 
 #define COMPASS_TYPE "navx"
@@ -37,7 +36,6 @@ Camera camera;
 Oled oled;
 Motor motor;
 Compass compass;
-Ultrasonic ultrasonic;
 Xbee xbee;
 
 void setup() {
@@ -65,11 +63,7 @@ void setup() {
   oled.print<String>(0, 0, "Started", 3); oled.show();
 };
 
-void loop () {
-  Serial.println(ultrasonic.South());
-}
-
-void loopa() {
+void loop() {
   xbee.Receive();
   if (step == -1) {
     camera.add("ox");
