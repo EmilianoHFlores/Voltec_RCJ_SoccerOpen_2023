@@ -44,7 +44,7 @@ int Pid::computePID(int input, int target, int error, PidPackage * pidPackage) {
         // Serial.print("D: "); Serial.print(derivate_term); format(derivate_term, 7);
         // Serial.print("Output: "); Serial.print(output); format(output, 7);
         // Serial.println();
-        return output *= -1;
+        return output;
     }
     return 9999;
 }

@@ -74,7 +74,8 @@ void Compass::begin(String type) {
 
 void Compass::init(String type) {
   TYPE = type;
-  
+  compassOled.begin();
+
   if (TYPE == "adafruit") {
     m_min = (vector<float>){-41.40, -59.55, 0.00};
     m_max = (vector<float>){22.35, 0.30, 32.55};
@@ -99,13 +100,10 @@ void Compass::init(String type) {
     float readQty = 50;
     initialReading = getAverageHeading(readQty);
   } else if (TYPE == "navx") {
-    Serial.println("Wire.begin()");
     Wire.begin();
-    Serial.println("For loop");
     for (int i = 0; i < sizeof(data); i++) {
       data[i] = 0;
     }
-    initialReading = getAverageHeadingNavx(50);
   } else {
     Serial.print("Unknown compass type");
     while (1)
@@ -129,8 +127,21 @@ float Compass::checkAngle() {
     }
     return LSMtoNavx(lsmAngle);
   } else if (TYPE == "navx") {
-    float navxLsmLikeAngle = rawRequestNavx();
-    return LSMtoNavx(navxLsmLikeAngle);
+    int i;
+    Wire.beginTransmission(NAVX_SENSOR_DEVICE_I2C_ADDRESS_7BIT);  // Begin transmitting to navX-Sensor
+    Wire.write(register_address);                                 // Sends starting register address
+    Wire.write(NUM_BYTES_TO_READ);                                // Send number of bytes to read
+    Wire.endTransmission();                                       // Stop transmitting
+
+    /* Receive the echoed value back */
+    Wire.beginTransmission(NAVX_SENSOR_DEVICE_I2C_ADDRESS_7BIT);               // Begin transmitting to navX-Sensor
+    Wire.requestFrom(NAVX_SENSOR_DEVICE_I2C_ADDRESS_7BIT, NUM_BYTES_TO_READ);  // Send number of bytes to read
+    delay(1);
+    while (Wire.available()) {  // Read data (slave may send less than requested)
+      data[i++] = Wire.read();
+    }
+    Wire.endTransmission();  // Stop transmitting
+    return IMURegisters::decodeProtocolSignedHundredthsFloat((char *)&data[0]);
   }
   return 0.00;
 }
@@ -145,14 +156,6 @@ float Compass::getAverageHeading(int n) {
     counter += heading();
   }
   return counter / n  ;
-}
-
-float Compass::getAverageHeadingNavx(int n) {
-  float counter = 0;
-  for (int i = 0; i < n; i++) {
-    counter += rawRequestNavx();
-  }
-  return counter / n;
 }
 
 float Compass::angleCalibrated(float angle, float initial) {
@@ -195,22 +198,4 @@ bool Compass::range(int _i, int _d, int deviation) {
 
 int Compass::to360(int angle) {
   return angle > 0 ? angle : 360 + angle;
-}
-
-float Compass::rawRequestNavx() {
-  int i;
-  Wire.beginTransmission(NAVX_SENSOR_DEVICE_I2C_ADDRESS_7BIT);  // Begin transmitting to navX-Sensor
-  Wire.write(register_address);                                 // Sends starting register address
-  Wire.write(NUM_BYTES_TO_READ);                                // Send number of bytes to read
-  Wire.endTransmission();                                       // Stop transmitting
-
-  /* Receive the echoed value back */
-  Wire.beginTransmission(NAVX_SENSOR_DEVICE_I2C_ADDRESS_7BIT);               // Begin transmitting to navX-Sensor
-  Wire.requestFrom(NAVX_SENSOR_DEVICE_I2C_ADDRESS_7BIT, NUM_BYTES_TO_READ);  // Send number of bytes to read
-  delay(1);
-  while (Wire.available()) {  // Read data (slave may send less than requested)
-    data[i++] = Wire.read();
-  }
-  Wire.endTransmission();  // Stop transmitting
-  return IMURegisters::decodeProtocolSignedHundredthsFloat((char *)&data[0]);
 }

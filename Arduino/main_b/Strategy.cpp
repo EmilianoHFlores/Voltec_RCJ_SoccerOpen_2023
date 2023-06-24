@@ -11,9 +11,9 @@ Strategy::Strategy () {
   center.errorThreshold = 15;
   center.maxErrorSum = 160;
 
-  deffense.kp = 1.3;
-  deffense.ki = .11;
-  deffense.kd = .8;
+  deffense.kp = 1.8;
+  deffense.ki = .12;
+  deffense.kd = 1;
   deffense.minOutput = 20;
   deffense.maxOutput = 255;
   deffense.delay = 10;
@@ -91,43 +91,19 @@ void Strategy::endAction () {
   xbee.Send(0);
   pid.clearPIDdata(&center);
   pid.clearPIDdata(&deffense);
+  motor.Stop();
 }
 
-void Strategy::deffend() {
-  if (!compass.range(compass.checkAngle(), 0, 10)) motor.rotateToAngle(compass.checkAngle(), 0, true);
-  if (locate_behind()) motor.pidNorth(0, scoreSpeed * floatMap(camera.oy(), 0, 30, 1, .15));
-}
+// void Strategy::deffend() {
+//   if (locate_behind()) motor.pidNorth(0, 130);
+// }
+// bool Strategy::locate_behind() {
+//   float angle = compass.checkAngle();
+//   int error = (camera.width / 2) - camera.ox();
 
-bool Strategy::locate_behind() {
-  float angle = compass.checkAngle();
-  int error = (camera.width / 2) - camera.ox();
+//   int output = pid.computePID(camera.ox(), camera.width / 2, error, &deffense);
 
-  int output = pid.computePID(camera.ox(), camera.width / 2, error, &deffense);
-  if (output == 9999) return false;
-  if (output == 0) return true;
-  if (output > 0) motor.pidEast(0, abs(output));
-  else motor.pidWest(0, abs(output));
-  return false;
-}
-
-bool Strategy::passiveDeffense() {
-  if (!compass.range(compass.checkAngle(), 0, 8)) {
-    motor.rotateToAngle(compass.checkAngle(), 0, true);
-  }
-  ultrasonic.South();
-  ultrasonic.West();
-  ultrasonic.East();
-
-  Serial.print("South: ");
-  Serial.print(ultrasonic.south);
-  Serial.print("  West: ");
-  Serial.print(ultrasonic.west);
-  Serial.print(" East: ");
-  Serial.println(ultrasonic.east);
-  if (ultrasonic.south > 60) motor.pidSouth(0, 130);
-  else if (ultrasonic.south < 30) motor.pidNorth(0, 130);
-  else if (ultrasonic.west > 80) motor.pidWest(0, 130);
-  else if (ultrasonic.west < 80) motor.pidEast(0, 130);
-  else motor.rotateToAngle(compass.checkAngle(), 0, true);
-
-}
+//   if (output < 0) motor.pidEast(0, abs(output));
+//   else motor.pidWest(0, abs(output));
+//   Serial.println("PID successfully executed.");
+// }

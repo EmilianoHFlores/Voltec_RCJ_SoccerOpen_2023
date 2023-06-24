@@ -17,7 +17,11 @@ class Camera {
     int _yw = -1;
     int querySize = 0;
     String queryString = "";
-
+    String read = "";
+    String arr[5];
+    String res = "";
+    String object = "";
+    String objectArr[2];
     bool includes(String arr[], int len, String target);
   public:
     Camera ();

@@ -18,7 +18,7 @@ class Strategy {
     uint8_t deffendAction = 0;
     int ball_angle = 0;
 
-    long loopId = 0;
+    uint32_t loopId = 0;
     String TEAM;
 
     String ballX = "ox";
@@ -35,13 +35,13 @@ class Strategy {
     bool scoregoal_first = true;
 
   public:
-    const int defaultSpeed = 240;
-    const int lowestSpeed = 70;
-    const int scoreSpeed = 170;
-    const int horizontalSpeed = 210;
-    const int fastRotationSpeed = 140;
-    const int rotationSpeed = 100;
-    const int positionSpeed = 90;
+    const uint8_t defaultSpeed = 240;
+    const uint8_t lowestSpeed = 70;
+    const uint8_t scoreSpeed = 220;
+    const uint8_t horizontalSpeed = 210;
+    const uint8_t fastRotationSpeed = 140;
+    const uint8_t rotationSpeed = 100;
+    const uint8_t positionSpeed = 90;
 
     Strategy();
     void begin(String team);
@@ -62,11 +62,11 @@ class Strategy {
 
 
     template <typename T>
-    void format(T data, int spaces) {
+    void format(T data, uint8_t spaces) {
       if(String(data).length() < spaces) printSpaces(spaces - String(data).length());
     };
-    void printSpaces(int spaces) {
-      for (int i = 0; i < spaces; i++) {
+    void printSpaces(uint8_t spaces) {
+      for (uint8_t i = 0; i < spaces; i++) {
         Serial.print(" ");
       }
     }

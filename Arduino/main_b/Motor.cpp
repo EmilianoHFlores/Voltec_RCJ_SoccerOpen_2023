@@ -11,7 +11,7 @@ Motor::Motor() {
   compassP.minOutput = 30;
   compassP.maxOutput = 255;
   compassP.delay = 20;
-  compassP.errorThreshold = 5;
+  compassP.errorThreshold = 7;
   compassP.maxErrorSum = 180;
 
   stability.kp = 1.5;
@@ -51,6 +51,8 @@ void Motor::begin (byte nwpwm, byte nwa, byte nwb, byte nepwm, byte nea, byte ne
 }
 
 void Motor::active(bool state) {
+  Serial.print("_NE.a: "); Serial.println(_NE.a);
+  Serial.print("_NE.b: "); Serial.println(_NE.b);
   if (state) {
     if (_NE.a != 50) return;
     _NE.a = _NE.originalA;
@@ -80,8 +82,6 @@ void Motor::pidNorth(int initAngle, int speed) {
   float error = initAngle + input;
   float output = pid.computePID(input, initAngle, error, &stability);
   if (output == 9999) return;
-  Serial.print(" output: ");
-  Serial.print(output);
   fNE(speed + output);
   fSE(speed + output);
   fNW(speed - output);

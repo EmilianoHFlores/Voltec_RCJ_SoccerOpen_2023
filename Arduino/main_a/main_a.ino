@@ -1,14 +1,14 @@
 #include "Strategy.h"
 #include "Qrd.h"
 
-#define VOLUME 25
+#define VOLUME 255
 #define TOGGLE_SWITCH 40
 #define START_SWITCH 41
-#define COMPASS_TYPE "adafruit"
+#define COMPASS_TYPE "navx"
 #define START_TIME 5000
 #define PREFERRED_ACTION 2
-#define TEAM "blue"
-#define REQUIRE_BUTTON false
+#define TEAM "yellow"
+#define REQUIRE_BUTTON true
 
 unsigned long previousMillis = millis();
 unsigned long currentMillis = millis();
@@ -20,6 +20,7 @@ Qrd qrd;
 
 void setup () {
   Serial.begin(115200);
+  Serial.setTimeout(50);
   pinMode(START_SWITCH, INPUT);
   pinMode(TOGGLE_SWITCH, INPUT);
 
@@ -31,12 +32,11 @@ void setup () {
   strategy.buzzer.stop();
 
   strategy.camera.begin();
-  strategy.oled.begin();
   strategy.xbee.begin();
-  strategy.motor.begin(3, 34, 35, 2, 33, 32, 5, 38, 39, 4, 37, 36);
+  strategy.motor.begin(2, 33, 32, 5, 38, 39, 3, 34, 35, 4, 36, 37);
   strategy.compass.begin(COMPASS_TYPE);
   strategy.motor.attachCompass(&strategy.compass);
-  strategy.ultrasonic.begin(99, 99, 25, 24, 23, 22);
+  strategy.ultrasonic.begin(25, 24, 23, 22, 27, 26);
 
   qrd.begin(A9, A8, A10, A11,   A3, A0, A2, A1,    A7, A4, A6, A5,    A15, A12, A14, A13);
 
@@ -45,15 +45,8 @@ void setup () {
   for (;;) {
     if (millis() - start_millis >= START_TIME) break;
     strategy.buzzer.beeps(2, VOLUME);
-    strategy.oled.print<String>(0, 0, "Ready in: ", 2);
-    strategy.oled.print<long>(0, 32, 5000 - (millis() - start_millis), 2);
-    strategy.oled.print<String>(50, 32, "ms", 2);
-    strategy.oled.show();
   }
   strategy.buzzer.stop();
-
-  strategy.oled.print<String>(0, 0, "Ready...", 3);
-  strategy.oled.show();
   strategy.buzzer.startTimer();
   for (;;) {
     if (digitalRead(START_SWITCH) || !REQUIRE_BUTTON) break;
@@ -61,12 +54,10 @@ void setup () {
     Serial.println("Waiting for human...");
   }
   strategy.buzzer.stop();
-  strategy.oled.print<String>(0, 0, "Started", 3);
-  strategy.oled.show();
 }
 
 void loop () {
-  Serial.println();
+  delay(1);
   if (!digitalRead(TOGGLE_SWITCH)) strategy.motor.active(false);
   else strategy.motor.active(true);
 
@@ -77,10 +68,17 @@ void loop () {
   strategy.camera.add("yw");
   strategy.camera.call();
 
+  Serial.print("ox: "); Serial.print(strategy.camera.ox()); strategy.format<int>(strategy.camera.ox(), 7);
+  Serial.print("oy: "); Serial.print(strategy.camera.oy()); strategy.format<int>(strategy.camera.oy(), 7);
+  Serial.print("yi: "); Serial.print(strategy.camera.yi()); strategy.format<int>(strategy.camera.yi(), 7);
+  Serial.print("yx: "); Serial.print(strategy.camera.yx()); strategy.format<int>(strategy.camera.yx(), 7);
+  Serial.print("yw: "); Serial.print(strategy.camera.yw()); strategy.format<int>(strategy.camera.yw(), 7);
+
   if (strategy.camera.ox() == -1) {
     strategy.endAction();
-    strategy.motor.TurnRight(110);
+    ("  Passive deffense  ");
+    strategy.passiveDeffense();
     return;
   }
-  strategy.attack();
+  strategy.deffend();
 }

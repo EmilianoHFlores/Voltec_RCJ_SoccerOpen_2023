@@ -1,14 +1,14 @@
 #include "Strategy.h"
 #include "Qrd.h"
 
-#define VOLUME 255
+#define VOLUME 25
 #define TOGGLE_SWITCH 40
 #define START_SWITCH 41
-#define COMPASS_TYPE "navx"
+#define COMPASS_TYPE "adafruit"
 #define START_TIME 5000
 #define PREFERRED_ACTION 2
 #define TEAM "blue"
-#define REQUIRE_BUTTON true
+#define REQUIRE_BUTTON false
 
 unsigned long previousMillis = millis();
 unsigned long currentMillis = millis();
@@ -31,20 +31,14 @@ void setup () {
   strategy.buzzer.stop();
 
   strategy.camera.begin();
-  Serial.println("camera");
+  strategy.oled.begin();
   strategy.xbee.begin();
-  Serial.println("xbee");
-  strategy.motor.begin(2, 33, 32, 5, 38, 39, 3, 34, 35, 4, 36, 37);
-  Serial.println("motor");
+  strategy.motor.begin(3, 34, 35, 2, 33, 32, 5, 38, 39, 4, 37, 36);
   strategy.compass.begin(COMPASS_TYPE);
-  Serial.println("compass");
   strategy.motor.attachCompass(&strategy.compass);
-  Serial.println("attachCompass");
-  strategy.ultrasonic.begin(25, 24, 23, 22, 27, 26);
-  Serial.println("ultrasonic");
+  strategy.ultrasonic.begin(99, 99, 25, 24, 23, 22);
 
   qrd.begin(A9, A8, A10, A11,   A3, A0, A2, A1,    A7, A4, A6, A5,    A15, A12, A14, A13);
-  Serial.println("qrd");
 
   unsigned long start_millis = millis();
   strategy.buzzer.startTimer();
@@ -53,6 +47,7 @@ void setup () {
     strategy.buzzer.beeps(2, VOLUME);
   }
   strategy.buzzer.stop();
+
   strategy.buzzer.startTimer();
   for (;;) {
     if (digitalRead(START_SWITCH) || !REQUIRE_BUTTON) break;
@@ -76,8 +71,8 @@ void loop () {
 
   if (strategy.camera.ox() == -1) {
     strategy.endAction();
-    strategy.passiveDeffense();
+    strategy.motor.TurnRight(110);
     return;
   }
-  strategy.deffend();
+  strategy.attack();
 }

@@ -5,7 +5,7 @@
 
 class Xbee {
   private:
-    long baud = 9600;
+    long baud = 115200;
     long timeout = 10;
     int _selfAction = 0;
     int _robot2Action = 0;

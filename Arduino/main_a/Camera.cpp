@@ -27,9 +27,7 @@ int Camera::direction(int value, int splits) {
 }
 
 bool Camera::call() {
-  unsigned long mill = millis();
   Serial1.println(queryString);
-  String read = "";
   if (Serial1.available()) { // After many unsuccessfull attempts to retrive information, the camera will eventually (~40ms) return the data back
     read = Serial1.readString();
     save(read);
@@ -54,8 +52,7 @@ void Camera::add(String string) {
 }
 
 void Camera::save(String result) {
-  String arr[querySize];
-  String res = result.substring(1, result.length() - 1);
+  res = result.substring(1, result.length() - 1);
   int amount_read = 0;
   int last_found = 0;
   for (int i = 0; i < res.length(); i ++) {
@@ -67,8 +64,7 @@ void Camera::save(String result) {
   }
   arr[querySize - 1] = res.substring(last_found, res.length());
   for (int i = 0; i < querySize; i++) {
-    String object = arr[i];
-    String objectArr[2];
+    object = arr[i];
     for (int i = 0; i < object.length(); i++) {
       if (object[i] == ':') {
         objectArr[0] = object.substring(0, i);
