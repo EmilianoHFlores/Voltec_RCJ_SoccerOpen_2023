@@ -17,19 +17,11 @@ def turnOnLeds():
     green_led.on();
     blue_led.on();
 
-i = 0;
-while (i <= 10):
-    i += 1;
-    turnOnLeds();
-    time.sleep(.1);
-    turnOffLeds();
-    time.sleep(.1);
-
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
 sensor.set_hmirror(True)
-sensor.skip_frames(time = 3000)
+sensor.skip_frames(time = 4000)
 
 # Disable automatic settings
 # Set rgb values of white balance (pump blue up)
@@ -46,7 +38,7 @@ clock = time.clock()
 uart = UART(3, 115200, timeout_char=1000)                         # init with given baudrate
 uart.init(115200, bits=8, parity=None, stop=1, timeout_char=1) # init with given parameters
 
-threshold_orange = [(50, 79, 28, 86, 53, 78)]
+threshold_orange = [(47, 81, 11, 84, 56, 79)]
 threshold_blue = [(20, 26, -30, -12, -6, 9)]
 threshold_yellow = [(47, 84, -50, -18, 48, 86)]
 SHOW_IMAGE_DECORATIONS = True
@@ -63,34 +55,24 @@ bIntercept = False
 
 def distance(y):
     if y == -1:    return -1;
-    elif y >= 189:    return 0
-    elif y >= 175:    return 3
-    elif y >= 161:    return 5
-    elif y >= 129:    return 10
-    elif y >= 108:    return 15
-    elif y >= 93:    return 20
-    elif y >= 83:    return 25
-    elif y >= 77:    return 30
-    elif y >= 71:    return 35
-    elif y >= 67:    return 40
-    elif y >= 64:    return 45
-    elif y >= 58:    return 50
-    elif y >= 56:    return 55
-    elif y >= 55:    return 60
-    elif y >= 53:    return 65
-    elif y >= 52:    return 70
-    elif y >= 51:    return 75
-    elif y >= 50:    return 80
-    elif y >= 49:    return 85
-    elif y >= 48:    return 90
-    elif y >= 47:    return 95
-    elif y >= 46:    return 100
-    elif y >= 45:    return 105
-    else:    return -1
+    elif y >= 217:    return 0
+    elif y >= 185:    return 3
+    elif y >= 165:    return 5
+    elif y >= 126:    return 10
+    elif y >= 103:    return 15
+    elif y >= 90:    return 20
+    elif y >= 80:    return 25
+    return 30
 
 start_nanos = time.time_ns();
 def millis():
     return (time.time_ns() - start_nanos) // 1000000
+
+def calculateWeight(blobX, blobW):
+    if blobX >= 160: return 1;
+    if (blobX + blobW) <= 160: return 0;
+    if (160 - blobX) < ((blobX + blobW) - 160): return 1;
+    return 0;
 
 uartUpdate = 1;
 frameUpdate = 1000 / 30; # fps
@@ -105,6 +87,7 @@ while(True):
     if (currentTime - previousTime1) >= uartUpdate:
         if uart.any():
             read = uart.readline();
+            print(read, end="");
             query = [];
             resultString = "";
             for i in range(0, len(read), 2):
@@ -126,7 +109,14 @@ while(True):
                     resultString += f"#yi:{int(yIntercept)}";
                 elif query[i] == bytes("bi", "ascii"):
                     resultString += f"#bi:{int(bIntercept)}";
+                elif query[i] == bytes("bw", "ascii"):
+                    resultString += f"#bw:{bWeight}"
+                elif query[i] == bytes("yw", "ascii"):
+                    resultString += f"#yw:{yWeight}"
+            print(resultString);
             uart.write(f"{resultString}\n");
+            while (uart.any()):
+                uart.read(); # Clear all data in Serial
         previousTime1 = currentTime;
     if (currentTime - previousTime2) >= frameUpdate:
         img = sensor.snapshot().rotation_corr(x_rotation = 180)
@@ -134,11 +124,10 @@ while(True):
         oBlobs = img.find_blobs(threshold_orange, pixels_threshold=3, area_threshold=1, merge=False)
         if oBlobs:
             oBlob = max(oBlobs, key=lambda b: b.area())
-            if (oBlob.roundness() > .1):
-                if (SHOW_IMAGE_DECORATIONS):    img.draw_circle(oBlob.enclosing_circle(), color=(img.get_pixel(oBlob.cx(), oBlob.cy())), thickness=3)
-                ox = oBlob.cx()
-                oy = oBlob.cy()
-                print(f"distance: {distance(oy)} -- raw: {oy}")
+            if (SHOW_IMAGE_DECORATIONS):    img.draw_circle(oBlob.enclosing_circle(), color=(img.get_pixel(oBlob.cx(), oBlob.cy())), thickness=3)
+            ox = oBlob.cx()
+            oy = oBlob.cy()
+            print(oy)
         else:
             ox = -1;
             oy = -1;
@@ -151,9 +140,11 @@ while(True):
             yy = yBlob.cy();
             if yBlob[0] < ox and ox < (yBlob[0] + yBlob[2]):    yIntercept = True;
             else:    yIntercept = False
+            yWeight = calculateWeight(yBlob[0], yBlob[2])
         else:
             yx = -1;
             yy = -1;
+            yWeight = -1;
         bBlobs = img.find_blobs(threshold_blue, pixels_threshold=130, area_threshold=100, merge=True)
         if bBlobs:
             bBlob = max(bBlobs, key=lambda b: b.area())
@@ -163,9 +154,11 @@ while(True):
             by = bBlob.cy();
             if bBlob[0] < ox and ox < (bBlob[0] + bBlob[2]):    bIntercept = True;
             else:    bIntercept = False;
+            bWeight = calculateWeight(bBlob[0], bBlob[2]);
         else:
             bx = -1;
             by = -1;
+            bWeight = -1
         turnOffLeds();
         if (TURN_ON_LEDS):
             if (ox >= 0):    red_led.on(); green_led.off(); blue_led.off();

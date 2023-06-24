@@ -12,8 +12,8 @@ class Xbee {
   public:
     Xbee();
     void begin();
-    void Send(int action);
     void Receive();
+    int Send(int action);
     int selfAction() { return _selfAction; };
     int robot2Action() { return _robot2Action; };
 };

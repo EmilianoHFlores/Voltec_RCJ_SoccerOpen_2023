@@ -26,18 +26,16 @@ int Camera::direction(int value, int splits) {
   return -1;
 }
 
-void Camera::call() {
+bool Camera::call() {
   unsigned long mill = millis();
   Serial1.println(queryString);
   String read = "";
-  for (int i = 0; i < 100; i++) {
-    if (Serial1.available()) {
-      read = Serial1.readString();
-      break;
-    }
-    delay(1);
+  if (Serial1.available()) { // After many unsuccessfull attempts to retrive information, the camera will eventually (~40ms) return the data back
+    read = Serial1.readString();
+    save(read);
+    return true;
   }
-  save(read);
+  return false; // If no data has been received, return false so the loop will continue
 }
 
 void Camera::del() {
@@ -85,6 +83,8 @@ void Camera::save(String result) {
     else if (objectArr[0] == "yy") { _yy = objectArr[1] == "-1" ? -1 : objectArr[1].toInt(); }
     else if (objectArr[0] == "bi") { _bi = objectArr[1] == "-1" ? -1 : objectArr[1].toInt(); }
     else if (objectArr[0] == "yi") { _yi = objectArr[1] == "-1" ? -1 : objectArr[1].toInt(); }
+    else if (objectArr[0] == "bw") { _bw = objectArr[1] == "-1" ? -1 : objectArr[1].toInt(); }
+    else if (objectArr[0] == "yw") { _yw = objectArr[1] == "-1" ? -1 : objectArr[1].toInt(); }
   }
   querySize = 0;
   queryString = "";

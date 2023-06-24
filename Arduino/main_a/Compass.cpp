@@ -77,20 +77,20 @@ void Compass::init(String type) {
   compassOled.begin();
 
   if (TYPE == "adafruit") {
-    m_min = (vector<float>){-82.35, -30.60, -44.10};
-    m_max = (vector<float>){4.35, 41.70, 28.80};
+    m_min = (vector<float>){-41.40, -59.55, 0.00};
+    m_max = (vector<float>){22.35, 0.30, 32.55};
 
     //FOR LSM
     if (!mag.begin()) {
       Serial.println("Unable to initialize LSM303 magnetometer");
-      while (1)
-        ;
+      Serial.println("Trying again...");
+      init (type);
     }
 
     if (!accel.begin()) {
       Serial.println("Unable to initialize LSM303 accelerometer");
-      while (1)
-        ;
+      Serial.println("Trying again...");
+      init (type);
     }
 
     accel.setRange(LSM303_RANGE_4G);
@@ -98,20 +98,14 @@ void Compass::init(String type) {
 
     // get average of 50 readings to get initial reading
     float readQty = 50;
-    Serial.println("Getting initial reading...");
     initialReading = getAverageHeading(readQty);
-    Serial.print("Initial reading is ");
-    compassOled.print(0, 0, "Initial read:", 1); compassOled.print(90, 0, initialReading, 1);
-    compassOled.print(0, 20, "Raw heading: ", 1); compassOled.print(90, 20, heading(), 1);
-    compassOled.print(0, 40, "Navx heading: ", 1); compassOled.print(90, 40, checkAngle(), 1);
-    compassOled.show();
   } else if (TYPE == "navx") {
     Wire.begin();
     for (int i = 0; i < sizeof(data); i++) {
       data[i] = 0;
     }
   } else {
-    compassOled.print(0, 0, "Unknown compass type", 1);
+    Serial.print("Unknown compass type");
     while (1)
       ;
   }

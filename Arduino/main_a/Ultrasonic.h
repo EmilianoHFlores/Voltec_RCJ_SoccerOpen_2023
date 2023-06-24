@@ -13,13 +13,13 @@ class Ultrasonic {
     Ultrasonic ();
     void begin (byte EchoE, byte TriggerE, byte EchoW, byte TriggerW, byte EchoS, byte TriggerS);
 
-    float East();
-    float West();
-    float South();
-    
-    float x_location();
-    float y_location();
-    float angleToGoal();
+    void West();
+    void East();
+    void South();
+
+    float west;
+    float east;
+    float south;
 };
 
 #endif

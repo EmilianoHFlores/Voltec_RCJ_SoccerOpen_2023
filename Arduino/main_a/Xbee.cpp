@@ -7,8 +7,8 @@ void Xbee::begin() {
   Serial2.setTimeout(timeout);
 }
 
-void Xbee::Send(int action) {
-  if (robot2Action() == action && action != 0) return;
+int Xbee::Send(int action) {
+  if (robot2Action() == action && action != 0) return 0;
   _selfAction = action;
   
   String toPrint;
@@ -16,6 +16,7 @@ void Xbee::Send(int action) {
   else if (action == 1) toPrint = "ATT";
   else toPrint = "DEF";
   Serial2.println(toPrint);
+  return 1;
 }
 
 void Xbee::Receive() {

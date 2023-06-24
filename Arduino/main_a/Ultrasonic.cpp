@@ -22,6 +22,9 @@ void Ultrasonic::begin (byte eche, byte trige, byte echw, byte trigw, byte echs,
   this -> TriggerW = trigw;
   this -> EchoS = echs;
   this -> TriggerS = trigs;
+  this -> west = -1;
+  this -> east = -1;
+  this -> south = -1;
 
   pinMode(EchoE, INPUT);
   pinMode(TriggerE, OUTPUT);
@@ -29,45 +32,35 @@ void Ultrasonic::begin (byte eche, byte trige, byte echw, byte trigw, byte echs,
   pinMode(TriggerW, OUTPUT);
   pinMode(EchoS, INPUT);
   pinMode(TriggerS, OUTPUT);
+
+  digitalWrite(TriggerE, LOW);
+  digitalWrite(TriggerW, LOW);
+  digitalWrite(TriggerS, LOW);
 }
 
-float Ultrasonic::East() {
+void Ultrasonic::East() {
   digitalWrite(TriggerE, HIGH);
   delayMicroseconds(10);
   digitalWrite(TriggerE, LOW);
-  return pulseIn(EchoE, HIGH) * 0.01723;
+  float val = pulseIn(EchoE, HIGH) * 0.01723;
+  if (val > 300) return;
+  east = val;
 }
 
-float Ultrasonic::West() {
+void Ultrasonic::West() {
   digitalWrite(TriggerW, HIGH);
   delayMicroseconds(10);
   digitalWrite(TriggerW, LOW);
-  return pulseIn(EchoW, HIGH) * 0.01723;
+  float val = pulseIn(EchoW, HIGH) * 0.01723;
+  if (val > 300) return;
+  west = val;
 }
 
-float Ultrasonic::South() {
+void Ultrasonic::South() {
   digitalWrite(TriggerS, HIGH);
   delayMicroseconds(10);
   digitalWrite(TriggerS, LOW);
-  return pulseIn(EchoS, HIGH) * 0.01723;
-}
-
-float Ultrasonic::x_location () {
-  float east = East();
-  float west = West();
-  if ((east + west) > (WIDTH - ROBOT_DIAMETER - DEVIATION) && (east + west) < (WIDTH - ROBOT_DIAMETER + DEVIATION)) {
-    return east;
-  }
-  return -1;
-}
-
-float Ultrasonic::y_location () {
-  return South();
-}
-
-float Ultrasonic::angleToGoal() {
-  float a = x_location();
-  float b = y_location();
-  if (a == -1) return -1;
-  return atan(a / b) * (180 / PI);
+  float val = pulseIn(EchoS, HIGH) * 0.01723;
+  if (val > 300) return;
+  south = val;
 }

@@ -1,24 +1,38 @@
 #include <Arduino.h>
 #include "Motor.h"
+#include "Pid.h"
 
 #define COMPASS_DEVIATION 15
 
-Motor::Motor() {}
+Motor::Motor() {
+  compassP.kp = 1.8;
+  compassP.ki = .1;
+  compassP.kd = 1.3;
+  compassP.minOutput = 30;
+  compassP.maxOutput = 255;
+  compassP.delay = 20;
+  compassP.errorThreshold = 7;
+  compassP.maxErrorSum = 180;
 
-void Motor::attachCompass (String type) {
-  compassMotor.begin(type);
+  stability.kp = 1.5;
+  stability.ki = .1;
+  stability.kd = 1;
+  stability.minOutput = 0;
+  stability.maxOutput = 30;
+  stability.delay = 20;
+  stability.errorThreshold = 3;
+  stability.maxErrorSum = 180;
 }
 
-void Motor::attachQrd (byte n1, byte n2, byte n3, byte n4, byte s1, byte s2, byte s3, byte s4, byte e1, byte e2, byte e3, byte e4, byte w1, byte w2, byte w3, byte w4) {
-  qrdMotor.begin(n1, n2, n3, n4, s1, s2, s3, s4, e1, e2, e3, e4, w1, w2, w3, w4);
-  qrdMotor.getThresholds();
-}
+void Motor::attachCompass (Compass * c) {
+  compass = c;
+};
 
 void Motor::begin (byte nwpwm, byte nwa, byte nwb, byte nepwm, byte nea, byte neb, byte swpwm, byte swa, byte swb, byte sepwm, byte sea, byte seb) {
-  _NE = {nea, neb, nepwm, 0};
-  _NW = {nwa, nwb, nwpwm, 0};
-  _SE = {sea, seb, sepwm, 0};
-  _SW = {swa, swb, swpwm, 0};
+  _NE = {nea, neb, nepwm, 0, nea, neb};
+  _NW = {nwa, nwb, nwpwm, 0, nwa, nwb};
+  _SE = {sea, seb, sepwm, 0, sea, seb};
+  _SW = {swa, swb, swpwm, 0, swa, swb};
 
   pinMode(_SE.pwm, OUTPUT);
   pinMode(_SW.pwm, OUTPUT);
@@ -34,12 +48,82 @@ void Motor::begin (byte nwpwm, byte nwa, byte nwb, byte nepwm, byte nea, byte ne
   pinMode(_SW.a, OUTPUT);
   pinMode(_NE.a, OUTPUT);
   pinMode(_NW.a, OUTPUT);
-
-  oledMotor.begin();
 }
 
+void Motor::active(bool state) {
+  Serial.print("_NE.a: "); Serial.println(_NE.a);
+  Serial.print("_NE.b: "); Serial.println(_NE.b);
+  if (state) {
+    if (_NE.a != 50) return;
+    _NE.a = _NE.originalA;
+    _NE.b = _NE.originalB;
+    _NW.a = _NW.originalA;
+    _NW.b = _NW.originalB;
+    _SE.a = _SE.originalA;
+    _SE.b = _SE.originalB;
+    _SW.a = _SW.originalA;
+    _SW.b = _SW.originalB;
+    return;
+  }
+  if (_NE.a == 50) return;
+  Stop();
+  _NE.a = 50;
+  _NE.b = 50;
+  _NW.a = 50;
+  _NW.b = 50;
+  _SE.a = 50;
+  _SE.b = 50;
+  _SW.a = 50;
+  _SW.b = 50;
+}
+
+void Motor::pidNorth(int initAngle, int speed) {
+  float input = compass -> checkAngle();
+  float error = initAngle + input;
+  float output = pid.computePID(input, initAngle, error, &stability);
+  if (output == 9999) return;
+  fNE(speed + output);
+  fSE(speed + output);
+  fNW(speed - output);
+  fSW(speed - output);
+}
+
+void Motor::pidSouth(int initAngle, int speed) {
+  speed *= -1;
+  float input = compass -> checkAngle();
+  float error = initAngle + input;
+  float output = pid.computePID(input, initAngle, error, &stability);
+  if (output == 9999) return;
+  fNW(speed - output);
+  fSW(speed - output);
+  fNE(speed + output);
+  fSE(speed + output);
+}
+
+void Motor::pidEast(int initAngle, int speed) {
+  float input = compass -> checkAngle();
+  float error = initAngle + input;
+  float output = pid.computePID(input, initAngle, error, &stability);
+  if (output == 9999) return;
+  fNW(speed - output);
+  fNE(-speed + output);
+  fSW(-speed - output);
+  fSE(speed + output);
+}
+
+void Motor::pidWest(int initAngle, int speed) {
+  float input = compass -> checkAngle();
+  float error = initAngle + input;
+  float output = pid.computePID(input, initAngle, error, &stability);
+  if (output == 9999) return;
+  fNW(-speed - output);
+  fNE(speed + output);
+  fSW(speed - output);
+  fSE(-speed + output);
+}
+
+
 void Motor::moveToAngle(int initAngle, int angle, int speed) {
-  wardOff();
   int NW_speed = speed * cos((PI / 180) * (angle + 315));
   int SW_speed = speed * cos((PI / 180) * (angle + 225));
   int SE_speed = speed * cos((PI / 180) * (angle + 135));
@@ -58,19 +142,9 @@ void Motor::moveToAngle(int initAngle, int angle, int speed) {
   fSW(SW_speed);
   fSE(SE_speed);
   fNE(NE_speed);
-  rotateToAngle(compassMotor.checkAngle(), initAngle, 75, false);
 }
-
-void Motor::moveToAngle(int initAngle, int angle, int speed, int d) {
-  long mill = millis();
-  while (mill + d >= millis()) {
-    moveToAngle(initAngle, angle, speed);
-  }
-}
-
 
 void Motor::NorthWest(int speed) {
-  wardOff();
   fNE(0, speed);
   fSW(0, speed);
   fNW(0, 0);
@@ -78,7 +152,6 @@ void Motor::NorthWest(int speed) {
 }
 
 void Motor::NorthEast(int speed) {
-  wardOff();
   fNW(0, speed);
   fSE(0, speed);
   fNE(0, 0);
@@ -86,7 +159,6 @@ void Motor::NorthEast(int speed) {
 }
 
 void Motor::SouthEast(int speed) {
-  wardOff();
   fNE(1, speed);
   fSW(1, speed);
   fNW(0, 0);
@@ -94,7 +166,6 @@ void Motor::SouthEast(int speed) {
 }
 
 void Motor::SouthWest(int speed) {
-  wardOff();
   fNW(1, speed);
   fSE(1, speed);
   fNE(0, 0);
@@ -102,7 +173,6 @@ void Motor::SouthWest(int speed) {
 }
 
 void Motor::North(int speed) {
-  wardOff();
   fNW(0, speed);
   fNE(0, speed);
   fSW(0, speed);
@@ -110,7 +180,6 @@ void Motor::North(int speed) {
 }
 
 void Motor::South(int speed) {
-  wardOff();
   fNW(1, speed);
   fNE(1, speed);
   fSW(1, speed);
@@ -118,7 +187,6 @@ void Motor::South(int speed) {
 }
 
 void Motor::East(int speed) {
-  wardOff();
   fNW(0, speed);
   fNE(1, speed);
   fSW(1, speed);
@@ -126,7 +194,6 @@ void Motor::East(int speed) {
 }
 
 void Motor::West(int speed) {
-  wardOff();
   fNW(1, speed);
   fNE(0, speed);
   fSW(0, speed);
@@ -138,6 +205,7 @@ void Motor::TurnLeft(int speed) {
   fNE(0, speed);
   fSW(1, speed);
   fSE(0, speed);
+  rotation = 0;
 };
 
 void Motor::TurnRight(int speed) {
@@ -145,20 +213,24 @@ void Motor::TurnRight(int speed) {
   fNE(1, speed);
   fSW(0, speed);
   fSE(1, speed);
+  rotation = 1;
 };
 
-void Motor::rotateToAngle(float _i, int _d, int speed, bool stop) {
-  int d = 0;
-  int d_min = d - COMPASS_DEVIATION;
-  int d_max = d + COMPASS_DEVIATION;
-  float i = _d - _i;
-  if ((d_min < i) && (i < d_max)) {
-    if (stop) Stop();
-    return;
+void Motor::rotateToAngle(float _initAngle, int _destiny, bool stop) {
+  pid.clearPIDdata(&compassP);
+  for (;;) {
+    float error = (_destiny - _initAngle) * -1;
+    int output = pid.computePID(_initAngle, _destiny, error, &compassP);
+    if (output != 9999) {
+      if (output == 0) {
+        if (stop) Stop();
+        return;
+      };
+      if (output < 0) TurnRight(abs(output));
+      else TurnLeft(abs(output));
+      _initAngle = compass -> checkAngle();
+    }
   }
-  if (i < 0 || i > 180) TurnLeft(speed);
-  else TurnRight(speed);
-  rotateToAngle(compassMotor.checkAngle(), _d, speed, stop);
 }
 
 void Motor::Stop() {
