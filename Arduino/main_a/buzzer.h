@@ -11,6 +11,7 @@ class Buzzer {
     byte buzzer;
 
     unsigned long timer = 0;
+    unsigned long lastPulse = 0;
   public:
     Buzzer();
     void begin(byte buzzer);
@@ -21,6 +22,8 @@ class Buzzer {
     void clear();
 
     void beeps(int times, int volume);
-};
+    void morse(String message, int volume);
+}
+;
 
 #endif

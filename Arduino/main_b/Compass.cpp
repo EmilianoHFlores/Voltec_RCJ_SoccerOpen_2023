@@ -77,8 +77,8 @@ void Compass::init(String type) {
   compassOled.begin();
 
   if (TYPE == "adafruit") {
-    m_min = (vector<float>){-41.40, -59.55, 0.00};
-    m_max = (vector<float>){22.35, 0.30, 32.55};
+    m_min = (vector<float>){-23.25, -24.30, 0.00};
+    m_max = (vector<float>){32.55, 23.55, 51.60};
 
     //FOR LSM
     if (!mag.begin()) {

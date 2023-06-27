@@ -29,19 +29,20 @@ class Strategy {
 
     Pid::PidPackage center;
     Pid::PidPackage deffense;
+    Pid::PidPackage score;
 
     int passiveDeffense_direction = 2; // 0 = Left, 1 = Right, 2 = Stop
     bool ignore_ultrasonic = false;
     bool scoregoal_first = true;
 
   public:
-    const int defaultSpeed = 240;
-    const int lowestSpeed = 70;
-    const int scoreSpeed = 170;
-    const int horizontalSpeed = 210;
-    const int fastRotationSpeed = 140;
-    const int rotationSpeed = 100;
-    const int positionSpeed = 90;
+    const int defaultSpeed = 255;
+    const int lowestSpeed = 110;
+    const int scoreSpeed = 150;
+    const int horizontalSpeed = 240;
+    const int fastRotationSpeed = 190;
+    const int rotationSpeed = 150;
+    const int positionSpeed = 130;
 
     Strategy();
     void begin(String team);

@@ -2,12 +2,12 @@
 #include "Pid.h"
 
 Strategy::Strategy () {
-  center.kp = .6;
-  center.ki = .12;
-  center.kd = .8;
+  center.kp = .8;
+  center.ki = 0;
+  center.kd = .4;
   center.minOutput = 10;
   center.maxOutput = 255;
-  center.delay = 10;
+  center.delay = 50;
   center.errorThreshold = 15;
   center.maxErrorSum = 160;
 
@@ -19,6 +19,15 @@ Strategy::Strategy () {
   deffense.delay = 10;
   deffense.errorThreshold = 20;
   deffense.maxErrorSum = 160;
+
+  score.kp = .5;
+  score.ki = 0;
+  score.kd = 0;
+  score.minOutput = 0;
+  score.maxOutput = 35;
+  score.delay = 50;
+  score.errorThreshold = 0;
+  score.maxErrorSum = 160;
 };
 
 void Strategy::begin(String team) {
@@ -31,11 +40,23 @@ void Strategy::begin(String team) {
 void Strategy::reset() {}
 
 void Strategy::attack() {
+
   if (attackAction == 2) { score_goal(); return; }
-  scoregoal_first = true;
+
+  if ( checkIntercept()
+   || (abs(camera.ox() - camera.width / 2) <= 20 && compass.range(compass.checkAngle(), 0, 10))
+   || attackAction == 1
+  ) {
+    attackAction = 1;
+    if (!center_ball()) return;
+    attackAction = 2;
+    return;
+  }
+  digitalWrite(9, LOW);
+
+  attackAction = 0;
   int direction = 0; // -1 = left, 0 = undefined, 1 = right
   int toAngle = 0;
-  if (checkIntercept()) { attackAction = 2; return; }
 
   if (checkWeight() == 1) direction = -1;
   else if (checkWeight() == 0) direction = 1;
@@ -59,17 +80,31 @@ void Strategy::attack() {
 }
 
 void Strategy::score_goal() {
-  if (!checkIntercept()) { attackAction = 0; return; }
-  if (scoregoal_first) {
-    if (center_ball()) scoregoal_first = false;
-  };
+  if (camera.oy() <= 0) {
+    digitalWrite(9, HIGH);
+  } else {
+    digitalWrite(9, LOW);
+  }
 
-  motor.pidNorth(0, scoreSpeed);
+  int error = (camera.width / 2) - camera.ox();
+  int output = pid.computePID(camera.ox(), camera.width / 2, error, &score);
+  if (output == 9999) return;
+  if (output == 0) return motor.pidNorth(0, scoreSpeed);
+  if (scoreSpeed + abs(output) > 255) output = 255 - (scoreSpeed + abs(output));
+  Serial.print("+"); Serial.print(scoreSpeed + output); format<int>(scoreSpeed + output, 6);
+  Serial.print("-"); Serial.print(scoreSpeed - output); format<int>(scoreSpeed - output, 6);
+
+  motor.fNE(scoreSpeed + output);
+  motor.fSE(scoreSpeed + output);
+  motor.fNW(scoreSpeed - output);
+  motor.fSW(scoreSpeed - output);
+
 }
 
 bool Strategy::center_ball() {
   int error = (camera.width / 2) - camera.ox();
 
+  center.errorThreshold = 15 * floatMap(camera.oy(), 0, 30, 4, 1);
   int output = pid.computePID(camera.ox(), camera.width / 2, error, &center);
   if (output == 9999) return false;
   if (output == 0) return true;
@@ -89,6 +124,7 @@ int Strategy::checkWeight() {
 
 void Strategy::endAction () {
   xbee.Send(0);
+  attackAction = 0;
   pid.clearPIDdata(&center);
   pid.clearPIDdata(&deffense);
   motor.Stop();

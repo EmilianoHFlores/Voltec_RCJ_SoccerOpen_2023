@@ -71,7 +71,7 @@ void Camera::save(String result) {
       }
     }
     objectArr[1] = object.substring(3, object.length());
-    if (objectArr[0] == "ox") { _ox = objectArr[1] == "-1" ? -1 : objectArr[1].toInt(); }
+    if (objectArr[0] == "ox") { _ox = objectArr[1] == "-1" ? -1 : objectArr[1].toInt(); _lastSeen = weight(_ox); }
     else if (objectArr[0] == "oy") { _oy = objectArr[1] == "-1" ? -1 : objectArr[1].toInt(); }
     else if (objectArr[0] == "bx") { _bx = objectArr[1] == "-1" ? -1 : objectArr[1].toInt(); }
     else if (objectArr[0] == "by") { _by = objectArr[1] == "-1" ? -1 : objectArr[1].toInt(); }
@@ -89,4 +89,10 @@ void Camera::save(String result) {
 bool Camera::includes(String arr[], int len, String target) {
   for (int i = 0; i < len; i++) if (arr[i] == target) return true;
   return false;
+}
+
+int Camera::weight(int ox) {
+  if (ox == -1) return _lastSeen;
+  if (ox <= (width / 2)) return 1;
+  return 0;
 }

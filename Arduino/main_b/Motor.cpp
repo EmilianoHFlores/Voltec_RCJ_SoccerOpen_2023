@@ -51,8 +51,6 @@ void Motor::begin (byte nwpwm, byte nwa, byte nwb, byte nepwm, byte nea, byte ne
 }
 
 void Motor::active(bool state) {
-  Serial.print("_NE.a: "); Serial.println(_NE.a);
-  Serial.print("_NE.b: "); Serial.println(_NE.b);
   if (state) {
     if (_NE.a != 50) return;
     _NE.a = _NE.originalA;
@@ -82,6 +80,7 @@ void Motor::pidNorth(int initAngle, int speed) {
   float error = initAngle + input;
   float output = pid.computePID(input, initAngle, error, &stability);
   if (output == 9999) return;
+  if (speed + abs(output) > 255) output = 255 - (speed + abs(output));
   fNE(speed + output);
   fSE(speed + output);
   fNW(speed - output);
@@ -94,6 +93,7 @@ void Motor::pidSouth(int initAngle, int speed) {
   float error = initAngle + input;
   float output = pid.computePID(input, initAngle, error, &stability);
   if (output == 9999) return;
+  if (speed + abs(output) > 255) output = 255 - (speed + abs(output));
   fNW(speed - output);
   fSW(speed - output);
   fNE(speed + output);
@@ -105,6 +105,7 @@ void Motor::pidEast(int initAngle, int speed) {
   float error = initAngle + input;
   float output = pid.computePID(input, initAngle, error, &stability);
   if (output == 9999) return;
+  if (speed + abs(output) > 255) output = 255 - (speed + abs(output));
   fNW(speed - output);
   fNE(-speed + output);
   fSW(-speed - output);
@@ -116,6 +117,7 @@ void Motor::pidWest(int initAngle, int speed) {
   float error = initAngle + input;
   float output = pid.computePID(input, initAngle, error, &stability);
   if (output == 9999) return;
+  if (speed + abs(output) > 255) output = 255 - (speed + abs(output));
   fNW(-speed - output);
   fNE(speed + output);
   fSW(speed - output);

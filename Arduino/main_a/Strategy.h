@@ -8,6 +8,7 @@
 #include "Ultrasonic.h"
 #include "Xbee.h"
 #include "Pid.h"
+#include "Pixy.h"
 
 #ifndef STRATEGY_H
 #define STRATEGY_H
@@ -60,6 +61,8 @@ class Strategy {
 
     void endAction();
 
+    int pixyGoalX() { if (TEAM == "blue") return pixy.bx(); return pixy.yx(); };
+    int pixyGoalY() { if (TEAM == "blue") return pixy.by(); return pixy.yy(); };
 
     template <typename T>
     void format(T data, uint8_t spaces) {
@@ -83,6 +86,7 @@ class Strategy {
     Buzzer buzzer;    
     Ultrasonic ultrasonic;
     Pid pid;
+    Pixy pixy;
 };
 
 #endif

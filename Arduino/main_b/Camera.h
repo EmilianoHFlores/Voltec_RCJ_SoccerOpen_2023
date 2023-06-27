@@ -15,6 +15,8 @@ class Camera {
     int _yi = -1;
     int _bw = -1;
     int _yw = -1;
+
+    int8_t _lastSeen = -1; // -1 -> unknown, 0 -> Left, 1 -> Right
     int querySize = 0;
     String queryString = "";
     String read = "";
@@ -23,6 +25,7 @@ class Camera {
     String object = "";
     String objectArr[2];
     bool includes(String arr[], int len, String target);
+    int weight(int ox);
   public:
     Camera ();
     void begin ();
@@ -45,6 +48,7 @@ class Camera {
     int bw () { return _bw; }; // blue-weight (goal)
     int yw () { return _yw; }; // yellow-weight (goal)
 
+    int8_t lastSeen () { return _lastSeen; };
     int width;
     int height;
 };

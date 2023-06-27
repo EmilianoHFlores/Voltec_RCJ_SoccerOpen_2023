@@ -35,15 +35,16 @@ int Pid::computePID(int input, int target, int error, PidPackage * pidPackage) {
 
         pidPackage -> previousError = error;
 
-        // Serial.print("Input: "); Serial.print(input); format(input, 7);
-        // Serial.print("Target: "); Serial.print(target); format(target, 7);
-        // Serial.print("Error: "); Serial.print(error); format(error, 7);
-        // Serial.print("ErrorSum: "); Serial.print(pidPackage -> errorSum); format(pidPackage -> errorSum, 7);
-        // Serial.print("P: "); Serial.print(proportional_term); format(proportional_term, 7);
-        // Serial.print("I: "); Serial.print(integral_term); format(integral_term, 7);
-        // Serial.print("D: "); Serial.print(derivate_term); format(derivate_term, 7);
-        // Serial.print("Output: "); Serial.print(output); format(output, 7);
-        // Serial.println();
+        Serial.print("Input: "); Serial.print(input); format(input, 7);
+        Serial.print("Target: "); Serial.print(target); format(target, 7);
+        Serial.print("Error: "); Serial.print(error); format(error, 7);
+        Serial.print("ErrorSum: "); Serial.print(pidPackage -> errorSum); format(pidPackage -> errorSum, 7);
+        Serial.print("P: "); Serial.print(proportional_term); format(proportional_term, 7);
+        Serial.print("I: "); Serial.print(integral_term); format(integral_term, 7);
+        Serial.print("D: "); Serial.print(derivate_term); format(derivate_term, 7);
+        Serial.print("Output: "); Serial.print(output); format(output, 7);
+        Serial.println();
+
         return output;
     }
     return 9999;

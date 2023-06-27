@@ -11,13 +11,13 @@ Strategy::Strategy () {
   center.errorThreshold = 15;
   center.maxErrorSum = 160;
 
-  deffense.kp = 1.3;
-  deffense.ki = .11;
-  deffense.kd = .8;
-  deffense.minOutput = 20;
+  deffense.kp = 2.1;
+  deffense.ki = .2;
+  deffense.kd = 1.6;
+  deffense.minOutput = 30;
   deffense.maxOutput = 255;
   deffense.delay = 10;
-  deffense.errorThreshold = 20;
+  deffense.errorThreshold = 15;
   deffense.maxErrorSum = 160;
 };
 
@@ -95,7 +95,7 @@ void Strategy::endAction () {
 
 void Strategy::deffend() {
   if (!compass.range(compass.checkAngle(), 0, 10)) motor.rotateToAngle(compass.checkAngle(), 0, true);
-  if (locate_behind()) motor.pidNorth(0, scoreSpeed * floatMap(camera.oy(), 0, 30, 1, .4));
+  if (locate_behind()) motor.pidNorth(0, scoreSpeed * floatMap(camera.oy(), 0, 30, 1, .65));
 }
 
 bool Strategy::locate_behind() {
@@ -111,29 +111,23 @@ bool Strategy::locate_behind() {
 }
 
 bool Strategy::passiveDeffense() {
-  Serial.print("  Passive deffense-f  ");
   if (!compass.range(compass.checkAngle(), 0, 8)) {
-    Serial.print("  Rotating to angle: ");
     motor.rotateToAngle(compass.checkAngle(), 0, true);
   }
 
-  Serial.print("  Reading south  ");
   ultrasonic.South();
-  Serial.print("  Reading west  ");
   ultrasonic.West();
-  Serial.print("  Reading east  ");
   ultrasonic.East();
 
-  Serial.print("South: ");
-  Serial.print(ultrasonic.south);
-  Serial.print("  West: ");
-  Serial.print(ultrasonic.west);
-  Serial.print(" East: ");
-  Serial.println(ultrasonic.east);
-  if (ultrasonic.south > 60) motor.pidSouth(0, 130);
-  else if (ultrasonic.south < 30) motor.pidNorth(0, 130);
+  Serial.print("South: "); Serial.print(ultrasonic.south); format<float>(ultrasonic.south, 8);
+  Serial.print("West: "); Serial.print(ultrasonic.west); format<float>(ultrasonic.west, 8);
+  Serial.print("East: "); Serial.print(ultrasonic.east); format<float>(ultrasonic.east, 8);
+  Serial.print("Yx: "); Serial.print(pixyGoalX()); format<int>(pixyGoalX(), 8);
+  Serial.print("Angle"); Serial.print(compass.checkAngle()); format<float>(compass.checkAngle(), 8);
+  Serial.println();
+
+  if (ultrasonic.south > 35) motor.pidSouth(0, 130);
+  else if (ultrasonic.south < 25) motor.pidNorth(0, 130);
   else if (ultrasonic.west > 80) motor.pidWest(0, 130);
   else if (ultrasonic.west < 80) motor.pidEast(0, 130);
-  else motor.rotateToAngle(compass.checkAngle(), 0, true);
-
 }

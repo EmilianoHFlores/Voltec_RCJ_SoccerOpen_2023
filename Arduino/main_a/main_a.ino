@@ -32,6 +32,8 @@ void setup () {
   strategy.buzzer.stop();
 
   strategy.camera.begin();
+  strategy.pixy.begin();
+
   strategy.xbee.begin();
   strategy.motor.begin(2, 33, 32, 5, 38, 39, 3, 34, 35, 4, 36, 37);
   strategy.compass.begin(COMPASS_TYPE);
@@ -57,7 +59,6 @@ void setup () {
 }
 
 void loop () {
-  delay(1);
   if (!digitalRead(TOGGLE_SWITCH)) strategy.motor.active(false);
   else strategy.motor.active(true);
 
@@ -67,16 +68,10 @@ void loop () {
   strategy.camera.add("yx");
   strategy.camera.add("yw");
   strategy.camera.call();
-
-  Serial.print("ox: "); Serial.print(strategy.camera.ox()); strategy.format<int>(strategy.camera.ox(), 7);
-  Serial.print("oy: "); Serial.print(strategy.camera.oy()); strategy.format<int>(strategy.camera.oy(), 7);
-  Serial.print("yi: "); Serial.print(strategy.camera.yi()); strategy.format<int>(strategy.camera.yi(), 7);
-  Serial.print("yx: "); Serial.print(strategy.camera.yx()); strategy.format<int>(strategy.camera.yx(), 7);
-  Serial.print("yw: "); Serial.print(strategy.camera.yw()); strategy.format<int>(strategy.camera.yw(), 7);
+  strategy.pixy.getBlocks();
 
   if (strategy.camera.ox() == -1) {
     strategy.endAction();
-    ("  Passive deffense  ");
     strategy.passiveDeffense();
     return;
   }

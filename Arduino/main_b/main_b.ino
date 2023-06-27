@@ -8,7 +8,7 @@
 #define START_TIME 5000
 #define PREFERRED_ACTION 2
 #define TEAM "blue"
-#define REQUIRE_BUTTON false
+#define REQUIRE_BUTTON true
 
 unsigned long previousMillis = millis();
 unsigned long currentMillis = millis();
@@ -22,7 +22,8 @@ void setup () {
   Serial.begin(115200);
   pinMode(START_SWITCH, INPUT);
   pinMode(TOGGLE_SWITCH, INPUT);
-
+  pinMode(9, OUTPUT);
+  digitalWrite(9, LOW);
   strategy.begin(TEAM);
   strategy.buzzer.begin(10);
   
@@ -33,7 +34,7 @@ void setup () {
   strategy.camera.begin();
   strategy.oled.begin();
   strategy.xbee.begin();
-  strategy.motor.begin(3, 34, 35, 2, 33, 32, 5, 38, 39, 4, 37, 36);
+  strategy.motor.begin(2, 32, 33, 3, 35, 34, 5, 38, 39, 4, 37, 36);
   strategy.compass.begin(COMPASS_TYPE);
   strategy.motor.attachCompass(&strategy.compass);
   strategy.ultrasonic.begin(99, 99, 25, 24, 23, 22);
@@ -71,7 +72,9 @@ void loop () {
 
   if (strategy.camera.ox() == -1) {
     strategy.endAction();
-    strategy.motor.TurnRight(110);
+    if (strategy.camera.lastSeen() == 1) strategy.motor.TurnLeft(200);
+    else strategy.motor.TurnRight(200);
+    digitalWrite(9, LOW);
     return;
   }
   strategy.attack();
