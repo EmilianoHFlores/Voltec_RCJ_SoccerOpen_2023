@@ -44,7 +44,7 @@ class Qrd {
 
     SensorData getStruct(int index) { return sensors[index]; }
 
-    bool North(bool log, Oled *oled);
+    bool North(bool log);
 
     bool _N1(bool log);
     bool _N2(bool log);

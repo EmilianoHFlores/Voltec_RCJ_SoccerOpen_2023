@@ -36,6 +36,8 @@ class Motor {
         Serial.print(" ");
       }
     }
+
+    unsigned long long previousRefresh = 0;
   public:
     Motor ();
     void begin (byte NWpwm, byte NWa, byte NWb, byte NEpwm, byte NEa, byte NEb, byte SWpwm, byte SWa, byte SWb, byte SEpwm, byte SEa, byte SEb);
@@ -81,6 +83,7 @@ class Motor {
     void fSE(int id, int speed);
     void fSE(int speed);
 
+    Compass helper;
 };
 
 #endif

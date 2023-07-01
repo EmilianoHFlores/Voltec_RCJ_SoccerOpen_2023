@@ -47,6 +47,7 @@ void Strategy::attack() {
    || (abs(camera.ox() - camera.width / 2) <= 20 && compass.range(compass.checkAngle(), 0, 10))
    || attackAction == 1
   ) {
+    buzzer.stop();
     attackAction = 1;
     if (!center_ball()) return;
     attackAction = 2;
@@ -62,21 +63,24 @@ void Strategy::attack() {
   else if (checkWeight() == 0) direction = 1;
   else if (compass.checkAngle() > 0) direction = 1;
   else direction = -1;
-  if (camera.ox() <= (160 - 50) || camera.ox() >= (160 + 50)) {
+
+  if (camera.ox() <= (160 - 70) || camera.ox() >= (160 + 50)) {
+    buzzer.stop();
     center_ball();
     return;
   };
 
-  if (camera.oy() <= 3) {
+  if (camera.oy() <= 5) {
     motor.pidSouth(0, 130);
+    buzzer.beep(255);
     return;
   }
 
   if (camera.oy() <= 5) toAngle = 90;
   else if (camera.oy() <= 15) toAngle = 45;
   else toAngle = 30;
-
-  motor.moveToAngle(compass.checkAngle(), toAngle * direction, horizontalSpeed * floatMap(camera.oy(), 0, 30, .15, 1));
+  buzzer.beep(100);
+  motor.moveToAngle(compass.checkAngle(), toAngle * direction, horizontalSpeed * floatMap(camera.oy(), 0, 30, .6, 1));
 }
 
 void Strategy::score_goal() {
@@ -90,13 +94,12 @@ void Strategy::score_goal() {
   int output = pid.computePID(camera.ox(), camera.width / 2, error, &score);
   if (output == 9999) return;
   if (output == 0) return motor.pidNorth(0, scoreSpeed);
-  if (scoreSpeed + abs(output) > 255) output = 255 - (scoreSpeed + abs(output));
+  output *= 4;
   Serial.print("+"); Serial.print(scoreSpeed + output); format<int>(scoreSpeed + output, 6);
   Serial.print("-"); Serial.print(scoreSpeed - output); format<int>(scoreSpeed - output, 6);
-
   motor.fNE(scoreSpeed + output);
-  motor.fSE(scoreSpeed + output);
-  motor.fNW(scoreSpeed - output);
+  motor.fSE(scoreSpeed - output);
+  motor.fNW(scoreSpeed + output);
   motor.fSW(scoreSpeed - output);
 
 }

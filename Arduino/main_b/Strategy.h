@@ -38,7 +38,7 @@ class Strategy {
   public:
     const int defaultSpeed = 255;
     const int lowestSpeed = 110;
-    const int scoreSpeed = 150;
+    const int scoreSpeed = 255;
     const int horizontalSpeed = 240;
     const int fastRotationSpeed = 190;
     const int rotationSpeed = 150;

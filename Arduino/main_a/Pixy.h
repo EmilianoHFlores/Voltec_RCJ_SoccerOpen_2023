@@ -13,9 +13,9 @@ class Pixy {
     int _bx;
     int _by;
 
-    const int ballId = 3;
-    const int yellowId = 1;
-    const int blueId = 2;
+    const int ballId = 1;
+    const int yellowId = 2;
+    const int blueId = 3;
   public:
     Pixy ();
     void begin();

@@ -19,6 +19,17 @@ Strategy::Strategy () {
   deffense.delay = 10;
   deffense.errorThreshold = 15;
   deffense.maxErrorSum = 160;
+
+  score.kp = .5;
+  score.ki = 0;
+  score.kd = 0;
+  score.minOutput = 0;
+  score.maxOutput = 35;
+  score.delay = 50;
+  score.errorThreshold = 0;
+  score.maxErrorSum = 160;
+
+  _errorThreshold = deffense.errorThreshold;
 };
 
 void Strategy::begin(String team) {
@@ -59,12 +70,33 @@ void Strategy::attack() {
 }
 
 void Strategy::score_goal() {
-  if (!checkIntercept()) { attackAction = 0; return; }
-  if (scoregoal_first) {
-    if (center_ball()) scoregoal_first = false;
-  };
+  int error = (camera.width / 2) - camera.ox();
+  int output = pid.computePID(camera.ox(), camera.width / 2, error, &score);
+  if (output == 9999) return;
+  if (output == 0) return motor.pidNorth(0, scoreSpeed);
+  output *= -1;
+  Serial.print("+"); Serial.print(scoreSpeed + output); format<int>(scoreSpeed + output, 6);
+  Serial.print("-"); Serial.print(scoreSpeed - output); format<int>(scoreSpeed - output, 6);
 
-  motor.pidNorth(0, scoreSpeed);
+  motor.fNE(scoreSpeed + output);
+  motor.fSE(scoreSpeed + output);
+  motor.fNW(scoreSpeed - output);
+  motor.fSW(scoreSpeed - output);
+}
+
+void Strategy::goto_ball(int speed) {
+  int error = (camera.width / 2) - camera.ox();
+  int output = pid.computePID(camera.ox(), camera.width / 2, error, &score);
+  if (output == 9999) return;
+  if (output == 0) return motor.pidNorth(0, speed);
+  output *= -1;
+  Serial.print("+"); Serial.print(speed + output); format<int>(speed + output, 6);
+  Serial.print("-"); Serial.print(speed - output); format<int>(speed - output, 6);
+
+  motor.fNE(speed + output);
+  motor.fSE(speed + output);
+  motor.fNW(speed - output);
+  motor.fSW(speed - output);
 }
 
 bool Strategy::center_ball() {
@@ -95,13 +127,17 @@ void Strategy::endAction () {
 
 void Strategy::deffend() {
   if (!compass.range(compass.checkAngle(), 0, 10)) motor.rotateToAngle(compass.checkAngle(), 0, true);
-  if (locate_behind()) motor.pidNorth(0, scoreSpeed * floatMap(camera.oy(), 0, 30, 1, .65));
+  if (locate_behind()) {
+    goto_ball(scoreSpeed * floatMap(camera.oy(), 0, 30, 1, .65));
+  }
 }
 
 bool Strategy::locate_behind() {
   float angle = compass.checkAngle();
   int error = (camera.width / 2) - camera.ox();
 
+  if (camera.oy() <= 3) deffense.errorThreshold = 160;
+  else deffense.errorThreshold = _errorThreshold;
   int output = pid.computePID(camera.ox(), camera.width / 2, error, &deffense);
   if (output == 9999) return false;
   if (output == 0) return true;
@@ -126,7 +162,9 @@ bool Strategy::passiveDeffense() {
   Serial.print("Angle"); Serial.print(compass.checkAngle()); format<float>(compass.checkAngle(), 8);
   Serial.println();
 
-  if (ultrasonic.south > 35) motor.pidSouth(0, 130);
+  if (ultrasonic.west > 100) motor.pidWest(0, 130);
+  else if (ultrasonic.west < 60) motor.pidEast(0, 130);
+  else if (ultrasonic.south > 35) motor.pidSouth(0, 130);
   else if (ultrasonic.south < 25) motor.pidNorth(0, 130);
   else if (ultrasonic.west > 80) motor.pidWest(0, 130);
   else if (ultrasonic.west < 80) motor.pidEast(0, 130);

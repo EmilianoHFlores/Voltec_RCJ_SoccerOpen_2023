@@ -9,6 +9,7 @@
 #include "Xbee.h"
 #include "Pid.h"
 #include "Pixy.h"
+#include "Dribbler.h"
 
 #ifndef STRATEGY_H
 #define STRATEGY_H
@@ -30,19 +31,21 @@ class Strategy {
 
     Pid::PidPackage center;
     Pid::PidPackage deffense;
+    Pid::PidPackage score;
 
     int passiveDeffense_direction = 2; // 0 = Left, 1 = Right, 2 = Stop
     bool ignore_ultrasonic = false;
     bool scoregoal_first = true;
-
+    bool firstPassive = true;
+    int _errorThreshold;
   public:
-    const uint8_t defaultSpeed = 240;
-    const uint8_t lowestSpeed = 70;
-    const uint8_t scoreSpeed = 220;
-    const uint8_t horizontalSpeed = 210;
-    const uint8_t fastRotationSpeed = 140;
-    const uint8_t rotationSpeed = 100;
-    const uint8_t positionSpeed = 90;
+    uint8_t defaultSpeed = 240;
+    uint8_t lowestSpeed = 70;
+    uint8_t scoreSpeed = 255;
+    uint8_t horizontalSpeed = 210;
+    uint8_t fastRotationSpeed = 140;
+    uint8_t rotationSpeed = 100;
+    uint8_t positionSpeed = 90;
 
     Strategy();
     void begin(String team);
@@ -54,6 +57,7 @@ class Strategy {
 
     bool locate_behind();
     bool center_ball();
+    void goto_ball(int speed);
     void reset();
 
     bool checkIntercept();
@@ -87,6 +91,7 @@ class Strategy {
     Ultrasonic ultrasonic;
     Pid pid;
     Pixy pixy;
+    Dribbler dribbler;
 };
 
 #endif

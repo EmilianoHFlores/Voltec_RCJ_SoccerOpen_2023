@@ -80,7 +80,6 @@ void Motor::pidNorth(int initAngle, int speed) {
   float error = initAngle + input;
   float output = pid.computePID(input, initAngle, error, &stability);
   if (output == 9999) return;
-  if (speed + abs(output) > 255) output = 255 - (speed + abs(output));
   fNE(speed + output);
   fSE(speed + output);
   fNW(speed - output);
@@ -93,7 +92,6 @@ void Motor::pidSouth(int initAngle, int speed) {
   float error = initAngle + input;
   float output = pid.computePID(input, initAngle, error, &stability);
   if (output == 9999) return;
-  if (speed + abs(output) > 255) output = 255 - (speed + abs(output));
   fNW(speed - output);
   fSW(speed - output);
   fNE(speed + output);
@@ -105,7 +103,6 @@ void Motor::pidEast(int initAngle, int speed) {
   float error = initAngle + input;
   float output = pid.computePID(input, initAngle, error, &stability);
   if (output == 9999) return;
-  if (speed + abs(output) > 255) output = 255 - (speed + abs(output));
   fNW(speed - output);
   fNE(-speed + output);
   fSW(-speed - output);
@@ -117,7 +114,6 @@ void Motor::pidWest(int initAngle, int speed) {
   float error = initAngle + input;
   float output = pid.computePID(input, initAngle, error, &stability);
   if (output == 9999) return;
-  if (speed + abs(output) > 255) output = 255 - (speed + abs(output));
   fNW(-speed - output);
   fNE(speed + output);
   fSW(speed - output);
@@ -287,6 +283,8 @@ void Motor::fNE(int id, int speed) {
   digitalWrite(_NE.b, HIGH);
 }
 void Motor::fNE(int speed) {
+  if (speed > 255) speed = 255;
+  else if (speed < -255) speed = -255;
   analogWrite(_NE.pwm, abs(speed) - _NE.speedDeviation);
   if (speed >= 0) {
     digitalWrite(_NE.a, 1);
@@ -314,6 +312,8 @@ void Motor::fNW(int id, int speed) {
   digitalWrite(_NW.b, HIGH);
 }
 void Motor::fNW(int speed) {
+  if (speed > 255) speed = 255;
+  else if (speed < -255) speed = -255;
   analogWrite(_NW.pwm, abs(speed) - _NW.speedDeviation);
   if (speed >= 0) {
     digitalWrite(_NW.a, 1);
@@ -340,6 +340,8 @@ void Motor::fSE(int id, int speed) {
   digitalWrite(_SE.b, HIGH);
 }
 void Motor::fSE(int speed) {
+  if (speed > 255) speed = 255;
+  else if (speed < -255) speed = -255;
   analogWrite(_SE.pwm, abs(speed) - _SE.speedDeviation);
   if (speed >= 0) {
     digitalWrite(_SE.a, 1);
@@ -366,6 +368,8 @@ void Motor::fSW(int id, int speed) {
   digitalWrite(_SW.b, HIGH);
 }
 void Motor::fSW(int speed) {
+  if (speed > 255) speed = 255;
+  else if (speed < -255) speed = -255;
   analogWrite(_SW.pwm, abs(speed) - _SW.speedDeviation);
   if (speed >= 0) {
     digitalWrite(_SW.a, 1);

@@ -33,7 +33,7 @@ void Qrd::begin (byte n1, byte n2, byte n3, byte n4, byte s1, byte s2, byte s3, 
 
   sensors[0].limit = -65;
   sensors[1].limit = -80;
-  sensors[2].limit = -80;
+  sensors[2].limit = -40;
   sensors[3].limit = -80;
 }
 
@@ -45,24 +45,19 @@ void Qrd::reset() {
   } 
 }
 
-bool Qrd::North(bool log, Oled *oled) {
-  int n1 = _N1(log);
+bool Qrd::North(bool log) {
+  int n1 = 0;
   int n2 = 0;
-  int n3 = 0;
+  int n3 = _N3(log);
   int n4 = 0;
   // int n2 = _N2(log);
   // int n3 = _N3(log);
   // int n4 = _N4(log);
   countIndex++;
   if (n1 || n2 || n3 || n4) {
-    if (n1) { oled -> print<String>(0, 0, "N1", 4); oled->print<int>(0, 32, sensors[0].value, 4); oled -> show(); Serial.print("    LINE DETECTED BY N1");};
-    if (n2) { oled -> print<String>(0, 0, "N2", 4); oled->print<int>(0, 32, sensors[1].value, 4); oled -> show(); Serial.print("    LINE DETECTED BY N2");};
-    if (n3) { oled -> print<String>(0, 0, "N3", 4); oled->print<int>(0, 32, sensors[2].value, 4); oled -> show(); Serial.print("    LINE DETECTED BY N3");};
-    if (n4) { oled -> print<String>(0, 0, "N4", 4); oled->print<int>(0, 32, sensors[3].value, 4); oled -> show(); Serial.print("    LINE DETECTED BY N4");};
     reset();
     return true;
   }
-  Serial.print("                        ");
   return false;
 }
 
@@ -86,22 +81,13 @@ bool Qrd::_N1(bool log) {
   sensors[sensor].value = x - y;
 
   if (!log) return (x - y) < sensors[sensor].limit;
-  Serial.print("(");
-  Serial.print(countIndex);
-  format<int>(countIndex, 6);
-  Serial.print(", ");
-  Serial.print(x);
-  format<int>(x, 4);
-  Serial.print(")  ");
-  Serial.print("x: ");
-  Serial.print(x);
-  format<int>(x, 5);
-  Serial.print(" y: ");
-  Serial.print(y);
-  format<int>(y, 5);
-  Serial.print(" diff: ");
-  Serial.print(x - y);
-  format<int>(x - y, 5);
+  Serial.print(sensors[sensor].pin); Serial.print(". ");
+  Serial.print("("); Serial.print(countIndex); format<int>(countIndex, 6);
+  Serial.print(", "); Serial.print(x); format<int>(x, 4);
+  Serial.print(")  "); 
+  Serial.print("x: "); Serial.print(x); format<int>(x, 5);
+  Serial.print(" y: "); Serial.print(y); format<int>(y, 5);
+  Serial.print(" diff: "); Serial.print(x - y); format<int>(x - y, 5);
 
 
   return (x - y) < sensors[sensor].limit;
@@ -127,13 +113,13 @@ bool Qrd::_N2(bool log) {
   sensors[sensor].value = x - y;
 
   if (!log) return (x - y) < sensors[sensor].limit;
-  Serial.print("(");
-  Serial.print(countIndex);
-  format<int>(countIndex, 6);
-  Serial.print(", ");
-  Serial.print(x - y);
-  format<int>(x - y, 4);
-  Serial.print(")    ");
+  Serial.print(sensors[sensor].pin); Serial.print(". ");
+  Serial.print("("); Serial.print(countIndex); format<int>(countIndex, 6);
+  Serial.print(", "); Serial.print(x); format<int>(x, 4);
+  Serial.print(")  "); 
+  Serial.print("x: "); Serial.print(x); format<int>(x, 5);
+  Serial.print(" y: "); Serial.print(y); format<int>(y, 5);
+  Serial.print(" diff: "); Serial.print(x - y); format<int>(x - y, 5);
   return (x - y) < sensors[sensor].limit;
 }
 
@@ -157,13 +143,13 @@ bool Qrd::_N3(bool log) {
   sensors[sensor].value = x - y;
 
   if (!log) return (x - y) < sensors[sensor].limit;
-  Serial.print("(");
-  Serial.print(countIndex);
-  format<int>(countIndex, 6);
-  Serial.print(", ");
-  Serial.print(x - y);
-  format<int>(x - y, 4);
-  Serial.print(")    ");
+  Serial.print(sensors[sensor].pin); Serial.print(". ");
+  Serial.print("("); Serial.print(countIndex); format<int>(countIndex, 6);
+  Serial.print(", "); Serial.print(x); format<int>(x, 4);
+  Serial.print(")  "); 
+  Serial.print("x: "); Serial.print(x); format<int>(x, 5);
+  Serial.print(" y: "); Serial.print(y); format<int>(y, 5);
+  Serial.print(" diff: "); Serial.print(x - y); format<int>(x - y, 5);
   return (x - y) < sensors[sensor].limit;
 }
 

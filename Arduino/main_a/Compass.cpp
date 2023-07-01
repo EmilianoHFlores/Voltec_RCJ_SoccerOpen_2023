@@ -14,7 +14,6 @@
 int register_address = NAVX_REG_YAW_L;
 byte data[512];
 
-int initialReading = 0;
 Adafruit_LIS2MDL mag = Adafruit_LIS2MDL(12345);
 Adafruit_LSM303_Accel_Unified accel = Adafruit_LSM303_Accel_Unified(54321);
 
@@ -76,8 +75,8 @@ void Compass::init(String type) {
   TYPE = type;
   
   if (TYPE == "adafruit") {
-    m_min = (vector<float>){-41.40, -59.55, 0.00};
-    m_max = (vector<float>){22.35, 0.30, 32.55};
+m_min = (vector<float>){0.00, -1.20, -45.15};
+m_max = (vector<float>){108.30, 81.45, 32.25};
 
     //FOR LSM
     if (!mag.begin()) {
@@ -99,9 +98,7 @@ void Compass::init(String type) {
     float readQty = 50;
     initialReading = getAverageHeading(readQty);
   } else if (TYPE == "navx") {
-    Serial.println("Wire.begin()");
     Wire.begin();
-    Serial.println("For loop");
     for (int i = 0; i < sizeof(data); i++) {
       data[i] = 0;
     }

@@ -34,7 +34,7 @@ void setup () {
   strategy.camera.begin();
   strategy.oled.begin();
   strategy.xbee.begin();
-  strategy.motor.begin(2, 32, 33, 3, 35, 34, 5, 38, 39, 4, 37, 36);
+  strategy.motor.begin(2, 32, 33, 3, 35, 34, 5, 38, 39, 4, 36, 37);
   strategy.compass.begin(COMPASS_TYPE);
   strategy.motor.attachCompass(&strategy.compass);
   strategy.ultrasonic.begin(99, 99, 25, 24, 23, 22);

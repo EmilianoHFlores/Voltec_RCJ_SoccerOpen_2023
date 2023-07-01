@@ -16,21 +16,23 @@ void Pixy::getBlocks () {
     _yy = -1;
     _bx = -1;
     _by = -1;
-    if (blocks) {
-        
-        for (int i = 0; i < blocks; i++) {
-            if (ballId == pixy.blocks[i].signature) {
-                _ox = pixy.blocks[i].x + pixy.blocks[i].width / 2;
-                _oy = pixy.blocks[i].y + pixy.blocks[i].height / 2;
-            }
-            if (yellowId == pixy.blocks[i].signature) {
-                _yx = pixy.blocks[i].x + pixy.blocks[i].width / 2;
-                _yy = pixy.blocks[i].y + pixy.blocks[i].height / 2;
-            }
-            if (blueId == pixy.blocks[i].signature) {
-                _bx = pixy.blocks[i].x + pixy.blocks[i].width / 2;
-                _by = pixy.blocks[i].y + pixy.blocks[i].height / 2;
-            }
+    if (!blocks) return;
+    Serial.print("  Blocks: ");
+    Serial.print(blocks);
+    Serial.print(" ");
+     
+    for (int i = 0; i < blocks; i++) {
+        if (ballId == pixy.blocks[i].signature) {
+            _ox = pixy.blocks[i].x + pixy.blocks[i].width / 2;
+            _oy = pixy.blocks[i].y + pixy.blocks[i].height / 2;
         }
-    };
+        if (yellowId == pixy.blocks[i].signature) {
+            _yx = pixy.blocks[i].x + pixy.blocks[i].width / 2;
+            _yy = pixy.blocks[i].y + pixy.blocks[i].height / 2;
+        }
+        if (blueId == pixy.blocks[i].signature) {
+            _bx = pixy.blocks[i].x + pixy.blocks[i].width / 2;
+            _by = pixy.blocks[i].y + pixy.blocks[i].height / 2;
+        }
+    }
 }

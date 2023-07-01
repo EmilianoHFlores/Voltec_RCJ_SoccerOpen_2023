@@ -18,15 +18,12 @@ class Compass {
     void vector_normalize(vector<float> *a);
 
     float getAverageHeading(int n);
-    float getAverageHeadingNavx(int n);
     float heading(void);
     float angleCalibrated(float angle, float initial);
-    float angleTo180s(float angle);
     float reverseAngle(float angle);
     float LSMtoNavx(float angle);
     float rawRequestNavx();
 
-    float initialReading;
     String TYPE;
   public:
     Compass ();
@@ -37,7 +34,12 @@ class Compass {
     
     float checkAngle ();
     bool range(int init, int destiny, int deviation);
-    int to360(int angle);  
+    float angleTo180s(float angle);
+    int to360(int angle);
+    float add(float angle1, float angle2);
+    float getAverageHeadingNavx(int n);
+
+    float initialReading = 0;
 };
 
 #endif

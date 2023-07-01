@@ -3,6 +3,7 @@
 #include "Pid.h"
 
 #define COMPASS_DEVIATION 15
+#define REFRESH_RATE 5 * 1000
 
 Motor::Motor() {
   compassP.kp = 1.8;
@@ -217,10 +218,25 @@ void Motor::TurnRight(int speed) {
 void Motor::rotateToAngle(float _initAngle, int _destiny, bool stop) {
   pid.clearPIDdata(&compassP);
   for (;;) {
+    Serial.print("  Navx: "); Serial.print(compass->checkAngle());
+    Serial.print("  Helper: "); Serial.print(helper.checkAngle());
+    Serial.print("  Navx initial: "); Serial.print(compass->initialReading);
+    Serial.print("  Helper initial: "); Serial.println(helper.initialReading);
     float error = (_destiny - _initAngle) * -1;
     int output = pid.computePID(_initAngle, _destiny, error, &compassP);
     if (output != 9999) {
       if (output == 0) {
+        if (!helper.range(helper.checkAngle(), 0, 5) && millis() - previousRefresh >= REFRESH_RATE) {
+          for (;;) {
+            if (abs(helper.checkAngle()) <= 5) {
+              compass -> initialReading = compass->getAverageHeadingNavx(25);
+              previousRefresh = millis();
+              break;
+            }
+            if (helper.checkAngle() > 0) TurnLeft(60);
+            else TurnRight(60);
+          }
+        }
         if (stop) Stop();
         return;
       };
